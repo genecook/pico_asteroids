@@ -15,10 +15,21 @@ struct coordinate {
         x = src.x;
         y = src.y;
     }
-    struct coordinate & operator=( const struct coordinate &src) {
+    struct coordinate & operator=(const struct coordinate &src) {
         x = src.x;
         y = src.y;
         return *this;
+    }
+    struct coordinate & operator+=(const struct coordinate &src) {
+        x += src.x;
+        y += src.y;
+        return *this;
+    }
+    struct coordinate operator+(const struct coordinate &src) {
+        struct coordinate tmp;
+        tmp.x = x + src.x;
+        tmp.y = y + src.y;
+        return tmp;
     }
     int x;
     int y;
@@ -50,9 +61,28 @@ struct line_segment {
 
 class astObj {
     public:
-    astObj() : outline(NULL), window_ulx(0), window_uly(0), window_lrx(SCREEN_WIDTH), 
-                window_lry(SCREEN_HEIGHT), scale(1.0), rotation(0.0), move_count(0) {};
+    astObj() { Init(); };
+    astObj(std::vector<struct coordinate> *outline, int x = 0, int y = 0) { 
+        Init(); 
+        AddOutline(outline);
+        SetOrigin(x, y);
+    };
     ~astObj() {};
+
+    void Init() {
+        outline = NULL;
+        window_ulx = 0;
+        window_uly = 0;
+        window_lrx = SCREEN_WIDTH; 
+        window_lry = SCREEN_HEIGHT; 
+        scale = 1.0; 
+        rotation = 0.0; 
+        origin.x = 0;
+        origin.y = 0;
+        at_origin = true;
+        move_count = 0;
+        move_initial_count = 1;
+    };
 
     void LocateSizeWindow(unsigned _window_ulx, unsigned _window_uly, unsigned _window_lrx, unsigned _window_lry) {
         window_ulx = _window_ulx;
@@ -81,6 +111,16 @@ class astObj {
         style = _style;
     }
 
+    void SetOrigin(int x, int y) {
+        origin.x = x;
+        origin.y = y;
+    };
+
+    void SetTrajectory(int x, int y) {
+        trajectory_coord.x = x;
+        trajectory_coord.y = y;
+    };
+
     void SetTarget(struct coordinate _target_ul, struct coordinate _target_lr) {
         target_ul = _target_ul;
         target_lr = _target_lr;
@@ -89,6 +129,8 @@ class astObj {
     void Advance(); // advance and (possibly redraw) object based on its speed
 
     bool AHit(struct coordinate projectile); // has the object been hit?
+
+    void DumpLineSegments();
 
     private:
     void Translate(); // translate each raw line segment into screen coordinates
@@ -125,6 +167,9 @@ class astObj {
 
     struct coordinate target_ul; // missiles must hit within
     struct coordinate target_lr; //   this 'target' (for now just a box)
+
+    struct coordinate origin;           // objects outline is placed at this origin
+    bool at_origin;                     // true when object is first placed
 
     struct coordinate trajectory_coord; //
     float trajectory_scale;             // object moves based on its

@@ -1,4 +1,5 @@
 #include <ast_obj.h>
+#include <iostream>
 
 // advance and (possibly redraw) object based on its speed
 // (caller responsible for determining when to advance (move) an object)
@@ -21,6 +22,13 @@ bool astObj::AHit(struct coordinate projectile) {
             projectile.y >= target_ul.y && projectile.y <= target_lr.y;
 }
 
+void astObj::DumpLineSegments() {
+    for(auto ix = line_segments_screen.begin(); ix != line_segments_screen.end(); ix++) {
+        std::cout << "p0 x,y: " << (*ix).p0.x << "," << (*ix).p0.y
+            << " --> p1 x,y: " << (*ix).p1.x << "," << (*ix).p1.y << std::endl;
+    }
+}
+
 // translate object outline into set of on-screen line segments...
 
 void astObj::Translate() {
@@ -29,9 +37,11 @@ void astObj::Translate() {
     for(auto ix = (*outline).begin(); ix != (*outline).end(); ix++) {
         if (ix == (*outline).begin()) {
             os0 = *ix;
+            os0 += at_origin ? origin : origin + trajectory_coord;
             continue;
         }
         os1 = *ix;
+        os1 += at_origin ? origin : origin + trajectory_coord;
 
         struct coordinate p0, p1;
         if ( (os0.x > os1.x) || (os0.y > os1.y) ) {
@@ -46,6 +56,9 @@ void astObj::Translate() {
 
         os0 = os1;
     }
+
+    at_origin = false;
+    origin += trajectory_coord;   // we've moved on...
 }
 
 // clip either end or both ends of line segment (if possible) to display screen,
