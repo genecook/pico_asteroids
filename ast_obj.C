@@ -57,8 +57,10 @@ void astObj::Translate() {
         os0 = os1;
     }
 
+    if (!at_origin)
+        origin += trajectory_coord;   // we've moved on...
+
     at_origin = false;
-    origin += trajectory_coord;   // we've moved on...
 }
 
 // clip either end or both ends of line segment (if possible) to display screen,
@@ -68,13 +70,16 @@ void astObj::Translate() {
 // See https://www.cs.montana.edu/courses/spring2009/425/dslectures/clipping.pdf
 //
 bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
-
+    std::cout << "\t(ClipLineSegment)" << "p0 x,y: " << p0.x << "," << p0.y
+            << " --> p1 x,y: " << p1.x << "," << p1.y << "???" << std::endl;
     // calculations assume line segment is ascending from p0 to p1...
 
     // NOTE: for our screen, origin is at upper left hand corner...
 
     unsigned code_p0 =  clip_code(p0);
     unsigned code_p1 =  clip_code(p1);
+    std::cout << "\tclip-codes: p0: 0x" << std::hex << code_p0 << " p1: 0x"
+              << code_p1 << std::dec << std::endl;
 
     if ( (code_p0 == code_p1) && (code_p0 == 0) ) return true; // both endpoints are within the (screen) window...
     if ( (code_p0 & code_p1) != 0 ) return false; // the line is completely outside the window...
@@ -111,6 +116,18 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
     //      x,y == 480,320 - lower right hand coordinates of (lcd) screen
     // A coordinate is 'good' if it is within the windows (screens) boundary
     switch( ( (code_p0<<4) | code_p1) ) {
+        case 0b00010000: // set p0.x to 0, p1 is good
+            p0.x = 0;
+            break;
+        case 0b00000001: // set p1.x to screen-width, p0 is good 
+            p1.x = window_LRX();
+            break;
+        case 0b01000000: // set p0.y to 0, p1 is good
+            p0.y = 0;
+            break;
+        case 0b00000100: // set p1.y to screen-height, p0 is good
+            p1.y = window_LRY();
+            break;
         case 0b01010000: // solve for p0.x using p0.y == 0 or p0.y using p0.x == 0, p1 is good
             if (solve_for_x(xt,p0,p1,window_ULY())) {
                 p0.x = xt;
@@ -183,6 +200,10 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
 }
 
 unsigned astObj::clip_code(struct coordinate &p0) {
+    //std::cout << "\t[clip_code] x,y: " << p0.x << "," << p0.y 
+    //<< " window LRX,LRY: " << window_ULX() << "," << window_ULY() 
+    //<< " LRX,LRY: " << window_LRX() << "," << window_LRY() 
+    //<< std::endl;
     return ((p0.y > window_LRY()) << 3) | ((p0.y < window_ULY()) << 2) | ((p0.x > window_LRX()) << 1) | (p0.x < window_ULX());
 }
 

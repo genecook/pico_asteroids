@@ -96,10 +96,10 @@ class astObj {
         rotation = _rotation;
     };
 
-    unsigned window_ULX() { return window_ulx; };
-    unsigned window_ULY() { return window_uly; };
-    unsigned window_LRX() { return window_lrx; };
-    unsigned window_LRY() { return window_lry; };
+    int window_ULX() { return window_ulx; };
+    int window_ULY() { return window_uly; };
+    int window_LRX() { return window_lrx; };
+    int window_LRY() { return window_lry; };
 
     void AddOutline(std::vector<struct coordinate> *_outline) { outline = _outline; }; 
 
@@ -156,8 +156,8 @@ class astObj {
     // to make it easier to erase the object prior to its redraw
     std::vector<struct line_segment> line_segments_screen; // 'processed' coordinates
 
-    unsigned window_ulx, window_uly; // upper left hand corner coordinates
-    unsigned window_lrx, window_lry; // lower right   "     "      ""
+    int window_ulx, window_uly; // upper left hand corner coordinates
+    int window_lrx, window_lry; // lower right   "     "      ""
 
     float scale;   // scale each line segment component;
     float rotation; // rotation element for each coordinate
