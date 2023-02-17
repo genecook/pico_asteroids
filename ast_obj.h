@@ -31,6 +31,7 @@ struct coordinate {
         tmp.y = y + src.y;
         return tmp;
     }
+    friend bool operator== (const struct coordinate &p0, const struct coordinate &p1);
     int x;
     int y;
 };
