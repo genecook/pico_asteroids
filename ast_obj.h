@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#define WHITE 0
 #define BLACK 1
 #define SOLID 1
 
@@ -55,8 +56,8 @@ struct line_segment {
     struct coordinate p1;
 };
 
-#define SCREEN_HEIGHT 320
-#define SCREEN_WIDTH  480
+#define WINDOW_HEIGHT 320
+#define WINDOW_WIDTH  480
 
 // need screen size, background color defines!!!
 
@@ -74,10 +75,12 @@ class astObj {
         outline = NULL;
         window_ulx = 0;
         window_uly = 0;
-        window_lrx = SCREEN_WIDTH; 
-        window_lry = SCREEN_HEIGHT; 
+        window_lrx = WINDOW_WIDTH; 
+        window_lry = WINDOW_HEIGHT; 
         scale = 1.0; 
         rotation = 0.0; 
+        color = WHITE;
+        style = SOLID;
         origin.x = 0;
         origin.y = 0;
         at_origin = true;

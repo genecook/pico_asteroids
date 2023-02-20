@@ -4,6 +4,8 @@
 #include <cassert>
 #include <exception>
 
+extern void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style);
+
 bool operator== (const struct coordinate &p0, const struct coordinate &p1) {
         return (p0.x == p1.x) && (p0.y == p1.y);
 }
@@ -60,7 +62,7 @@ void astObj::Translate() {
         }
         if (ClipLineSegment(p0,p1)) {
             line_segments_screen.push_back( line_segment(p0,p1) );
-            std::cout << "\tp0 x,y: " << p0.x << "," << p0.y << " --> p1 x,y: " << p1.x << "," << p1.y << std::endl;
+            std::cout << "\tp0 x,y: " << p0.x << "," << p0.y << " --> p1 x,y: " << p1.x << "," << p1.y << "\n" << std::endl;
         }
 
         os0 = os1;
@@ -152,8 +154,11 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
         case 0x40: // 0100 0000: set p0.y to 0, p1 is good
             p0.y = 0;
             break;
-        case 0x04: // 0000 0100: set p1.y to screen-height, p0 is good
-            p1.y = window_LRY();
+        case 0x04: // 0000 0100: set p1.y to 0, p0 is good
+            p1.y = window_ULY() - 1;
+            break;
+        case 0x08: // 0000 1000: set p1.y to screen-height, p0 is good
+            p1.y = window_LRY() - 1;
             break;
         case 0x50: // 0101 0000: solve for p0.x using p0.y == 0 or p0.y using p0.x == 0, p1 is good
             if (solve_for_x(xt,p0,p1,window_ULY())) {
@@ -235,7 +240,7 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
     }
 
     if (have_solution) {
-        std::cout << "\thave solution!\n" << std::endl;
+        std::cout << "\thave solution!" << std::endl;
     } else {
         std::cout << "\tno solution!\n" << std::endl;
     }
@@ -276,7 +281,7 @@ void astObj::Draw(bool erase) {
     for(auto ix = line_segments_screen.begin(); ix != line_segments_screen.end(); ix++) {
         int draw_color = erase ? BLACK : color;
         int draw_style = erase ? SOLID : style;
-        // DrawLine((*ix).p0.x,(*ix).p0.y, (*ix).p1.x,(*ix).p1.y, draw_color,draw_style); // via lcd graphics api!
+        DrawLine((*ix).p0.x,(*ix).p0.y, (*ix).p1.x,(*ix).p1.y, draw_color,draw_style); // via lcd graphics api!
     }
 }
 
