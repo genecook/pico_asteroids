@@ -100,10 +100,19 @@ class astObj {
         rotation = _rotation;
     };
 
-    int window_ULX() { return window_ulx; };
-    int window_ULY() { return window_uly; };
-    int window_LRX() { return window_lrx; };
-    int window_LRY() { return window_lry; };
+    // use these to see if some x,y coordinate exceeds window boundaries:
+
+    int window_bounds_ULX() { return window_ulx; };    // upper left 
+    int window_bounds_ULY() { return window_uly; };    //   x,y
+    int window_bounds_LRX() { return window_lrx; };    // lower right
+    int window_bounds_LRY() { return window_lry; };    //   x,y
+
+    // use these when clipping line segments to legal x,y window coordinates:
+
+    int window_ULX() { return window_ulx;     };       // upper left
+    int window_ULY() { return window_uly;     };       //   x,y
+    int window_LRX() { return window_lrx - 1; };       // lower right
+    int window_LRY() { return window_lry - 1; };       //   x,y
 
     void AddOutline(std::vector<struct coordinate> *_outline) { outline = _outline; }; 
 
@@ -149,6 +158,8 @@ class astObj {
     bool ClipLineSegment(struct coordinate &line_segment_start,struct coordinate &line_segment_end);
 
     unsigned clip_code(struct coordinate &p0);
+    int grid_index(unsigned int clip_code);
+
     bool solve_for_x(unsigned &xt, struct coordinate &p0,struct coordinate &p1, unsigned yt);
     bool solve_for_y(unsigned &yt, struct coordinate &p0,struct coordinate &p1, unsigned xt);
 

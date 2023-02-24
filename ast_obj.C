@@ -80,6 +80,71 @@ void astObj::Translate() {
 // My version of Cohen-Sutherland line clipping.
 // See https://www.cs.montana.edu/courses/spring2009/425/dslectures/clipping.pdf
 //
+// the display screen boundaries are 'mapped' to 'tic-tac-to' squares as so:
+//
+//     0 | 1 | 2
+//     --+---+--
+//     3 | 4 | 5     4 - on-screen, all other squares off-screen
+//     --+---+--
+//     6 | 7 | 8
+
+/*
+                                                     actions...
+                                                     
+                    case                                             snap p0 or p1 to window x or y boundary...                       solve for...         
+       ----------------------------------    ----------------------------------------------------------------------------------   ----------------------
+        p0  p1   p0.x==p1.x?  p0.y==p1.y?    p0.x->ULX p0.y->ULY  p0.x->LRX p0.y->LRY  p1.x->LRX p1.y->LRY  p1.x->ULX p1.y->ULY   p0.x  p0.y  p1.x  p1.y         notes
+       ---  ---  -----------  -----------    --------- ---------  --------- ---------  --------- ---------  --------- ---------   ----  ----  ----  ----      -------------------
+        3    4       0             0            1           0         0         0          0         0          0        0         0     1     0     0    
+                     0             1            1           0         0         0          0         0          0        0         0     0     0     0         horizontal line
+
+        3    5       0             0            1           0         0         0          1         0          0        0         0     1     0     1    
+                     0             1            1           0         0         0          1         0          0        0         0     0     0     0         horizontal line
+
+        4    5       0             0            0           0         0         0          1         0          0        0         0     0     0     1    
+                     0             1            0           0         0         0          1         0          0        0         0     0     0     0         horizontal line
+
+
+        1    4       0             0            0           1         0         0          0         0          0        0         1     0     0     0    
+                     1             0            0           1         0         0          0         0          0        0         0     0     0     0         vertical line
+
+        1    7       0             0            0           1         0         0          0         1          0        0         1     0     1     0      
+                     1             0            0           1         0         0          0         1          0        0         0     0     0     0         vertical line
+
+        4    7       0             0            0           0         0         0          0         1          0        0         0     0     1     0     
+                     1             0            0           0         0         0          0         1          0        0         0     0     0     0         vertical line
+
+
+        0    4       0             0            1           0         0         0          0         0          0        0         0     1     0     0     
+
+        0    8       0             0            1           0         0         0          0         0          0        0         0     1     0     0         solve for p0...     
+                                                0           0         0         0          1         0          0        0         0     0     0     1            ...then p1   
+
+        4    8       0             0            0           0         0         0          1         0          0        0         0     0     0     1      
+
+
+        1    5       0             0            0           1         0         0          0         0          0        0         1     0     0     0         solve p0...
+                                                0           0         0         0          1         0          0        0         0     0     0     1            ...then p1
+
+        3    7       0             0            1           0         0         0          0         0          0        0         0     1     0     0         solve p0...
+                                                0           0         0         0          0         1          0        0         0     0     1     0            ...then p1
+
+
+        2    4       0             0            0           0         1         0          0         0          0        0         0     1     0     0      
+
+        2    6       0             0            0           0         1         0          0         0          0        0         0     1     0     0         solve p0...
+                                                0           0         0         0          0         0          1        0         0     0     0     1            ...then p1
+
+        4    6       0             0            0           0         0         0          0         0          1        0         0     0     0     1     
+
+
+        1    3       0             0            0           1         0         0          0         0          0        0         1     0     0     0         solve p0...
+                                                0           0         0         0          0         0          1        0         0     0     0     1            ...then p1 
+
+        5    7       0             0            0           0         1         0          0         0          0        0         0     1     0     0         solve p0...
+                                                0           0         0         0          1         0          0        0         0     0     0     1            ...then p1
+*/
+
 bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
     std::cout << "\t(ClipLineSegment)" << "p0 x,y: " << p0.x << "," << p0.y
             << " --> p1 x,y: " << p1.x << "," << p1.y << "???" << std::endl;
@@ -111,32 +176,6 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
 
     // the line may or may not cross the window...
 
-    // the display screen boundaries are 'mapped' to 'tic-tac-to' squares as so:
-    //
-    //     0 | 1 | 2
-    //     --+---+--
-    //     3 | 4 | 5     4 - on-screen, all other squares off-screen
-    //     --+---+--
-    //     6 | 7 | 8
-    //     
-    // given the above square numbering:
-    //
-    //   square    p0, p1 on-screen?
-    //   p0   p1       p0    p1         process
-    //   --   --       ---   ---     --------------------------------------------------------------------------------------
-    //    0    4       off   on      solve for p0.x using p0.y == 0 or p0.y using p0.x == 0, p1 is good
-    //    3    1       off   off     solve for p0.y using p0.x == 0, solve for p1.x using p1.y == 0
-    //    1    5       off   off     solve for p0.y using p0.x = screen-width, solve for p1.x using p1.y == 0
-    //    4    2       on    off     p0 is good, solve for p1.x using p1.y == 0 or p1.y using p1.x == screen-width
-    //    3    7       off   off     solve for p0.y using p0.x==0, solve for p1.x using p1.y == screen-height
-    //    6    4       off   on      solve for p0.y using p0.x==0 or p0.x using p0.y==screen-height, p1 is good
-    //    4    8       on    off     p0 is good, solve for p1.y using p1.x==screen-width or p1.x using p1.y == screen-height
-    //    7    5       off   off     solve for p0.x using p0.y == screen-height, solve for p1.y using p1.x == screen-width
-    //    3    4       off   on      set p0.x to 0, p1 is good
-    //    4    5       on    off     set p1.x to screen-width, p0 is good
-    //    1    4       off   on      set p0.y to 0, p1 is good
-    //    4    7       on    off     set p1.y to 0, p0 is good
-
     unsigned xt, yt;
     bool have_solution = true; // assume line can be clipped to screen
 
@@ -144,85 +183,189 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
     //      x,y == 0,0 - upper left hand coordinates of (lcd) screen
     //      x,y == 480,320 - lower right hand coordinates of (lcd) screen
     // A coordinate is 'good' if it is within the windows (screens) boundary
-    switch( ( (code_p0<<4) | code_p1) ) {
-        case 0x10: // 0001 0000: set p0.x to 0, p1 is good
-            p0.x = 0;
-            break;
-        case 0x01: // 0000 0001: set p1.x to screen-width, p0 is good 
-            p1.x = window_LRX();
-            break;
-        case 0x40: // 0100 0000: set p0.y to 0, p1 is good
-            p0.y = 0;
-            break;
-        case 0x04: // 0000 0100: set p1.y to 0, p0 is good
-            p1.y = window_ULY() - 1;
-            break;
-        case 0x08: // 0000 1000: set p1.y to screen-height, p0 is good
-            p1.y = window_LRY() - 1;
-            break;
-        case 0x50: // 0101 0000: solve for p0.x using p0.y == 0 or p0.y using p0.x == 0, p1 is good
-            if (solve_for_x(xt,p0,p1,window_ULY())) {
-                p0.x = xt;
-            } else if (solve_for_y(yt,p0,p1,window_ULX())) {
-                p0.y = yt;
-            } else
-                have_solution = false;
-            break; 
-        case 0x14: // 0001 0100: solve for p0.y using p0.x == 0, solve for p1.x using p1.y == 0
-            have_solution = solve_for_y(yt,p0,p1,window_ULX()) && solve_for_x(xt,p0,p1,window_ULY());
-            if (have_solution) {
-                p0.y = yt;
-                p1.x = xt;
-            }
-            break;
-        case 0x42: // 0100 0010: solve for p0.y using p0.x == screen-width, solve for p1.x using p1.y == 0
-            have_solution = solve_for_y(yt,p0,p1,window_LRX()) && solve_for_x(xt,p0,p1,window_ULY());
-            if (have_solution) {
-                p0.y = yt;
-                p1.x = xt;
-            }
-            break;
-        case 0x06: // 0000 0110: p0 is good, solve for p1.x using p1.y == 0 or p1.y using p1.x == 480
-            if (solve_for_x(xt,p0,p1,window_ULY())) {
-                p1.x = xt;
-            } else if (solve_for_y(yt,p0,p1,window_LRX())) {
-                p1.y = yt;
-            } else
-                have_solution = false;
-            break;
-        case 0x18: // 0001 1000: solve for p0.y using p0.x == 0, solve for p1.x using p1.y == screen-height
-            have_solution = solve_for_y(yt,p0,p1,window_ULX()) && solve_for_x(xt,p0,p1,window_LRY());
-            if (have_solution) {
-                p0.y = yt;
-                p1.x = xt;
-            }
-            break;
-        case 0x90: // 1001 0000: solve for p0.y using p0.x == 0 or p0.x using p0.y == screen-height, p1 is good
-            if (solve_for_y(yt,p0,p1,window_ULX())) {
-                p0.y = yt;
-            } else if (solve_for_x(xt,p0,p1,window_LRY())) {
-                p0.x = xt;
-            } else
-                have_solution = false;  
-            break;
-        case 0x02: // 0000 0010: p0 is good, solve for p1.y using p1.x == screen-width or p1.x using p1.y == screen-height
-            if (solve_for_y(yt,p0,p1,window_LRX())) {
-                p1.y = yt;
-            } else if (solve_for_x(xt,p0,p1,window_LRY())) {
-                p1.x = xt;
-            } else
-                have_solution = false;  
-            break;
-        case 0x8a: // 1000 1010: solve for p0.x using p0.y == 320, solve for p1.y using p1.x == 480
-            have_solution = solve_for_x(xt,p0,p1,window_LRY()) && solve_for_y(yt,p0,p1,window_LRX());
-            if (have_solution) {
-                p0.x = xt;
-                p1.y = yt;
-            }
-            break;
-        default: std::cerr << "Bad clip case!!!" << std::endl;
+
+    unsigned int clip_action = (grid_index(code_p0)<<12) | (grid_index(code_p1)<<8) | ((p0.x==p1.x)<<4) | (p0.y==p1.y);
+
+    std::cout << "\tclip action: 0x" << std::hex << clip_action << std::dec << std::endl;
+
+    switch( (int) clip_action) {
+        case 0x3400: have_solution = solve_for_y(yt,p0,p1,window_ULX());
+                     if (have_solution) {
+                        p0.x = window_ULX(); 
+                        p0.y = yt; 
+                     }
+                     break;  
+
+        case 0x3401: p0.x = window_ULX(); 
+                     break;
+
+        case 0x3500: have_solution = solve_for_y(yt,p0,p1,window_ULX()); 
+                     if (have_solution) {
+                        p0.x = window_ULX(); 
+                        p0.y = yt;
+                     } 
+                     have_solution &= solve_for_y(yt,p0,p1,window_LRX()); 
+                     if (have_solution) {
+                        p1.x = window_LRX();
+                        p1.y = yt; 
+                     }
+                     break; 
+
+        case 0x3501: p0.x = window_ULX();
+                     p1.x = window_LRX();
+                     break;
+
+        case 0x4500: have_solution = solve_for_y(yt,p0,p1,window_LRX()); 
+                     if (have_solution) {
+                        p1.x = window_LRX();
+                        p1.y = yt;
+                     }
+                     break;
+
+        case 0x4501: p1.x = window_LRX();
+                     break;
+
+        case 0x1400: have_solution = solve_for_x(xt,p0,p1,window_ULY());
+                     if (have_solution) {
+                        p0.x = xt;
+                        p0.y = window_ULY();
+                     }
+                     break;
+
+        case 0x1410: p0.y = window_ULY();
+                     break;
+
+        case 0x1700: have_solution = solve_for_x(xt,p0,p1,window_ULY());
+                     if (have_solution) {
+                        p0.x = xt;
+                        p0.y = window_ULY();
+                     }
+                     have_solution &= solve_for_x(xt,p0,p1,window_LRY());
+                     if (have_solution) {
+                        p1.x = xt;
+                        p1.y = window_LRY();
+                     }
+                     break;
+
+        case 0x1710: p0.y = window_ULY();
+                     p1.y = window_LRY();
+                     break;
+ 
+        case 0x4700: have_solution &= solve_for_x(xt,p0,p1,window_LRY());
+                     if (have_solution) {
+                        p1.x = xt;
+                        p1.y = window_LRY();
+                     }
+                     break;
+
+        case 0x4710: p1.y = window_LRY();
+
+           std::cout << "\t!!! P1 x,y: " << p1.x << "," << p1.y << std::endl;
+                     break;
+
+        case 0x0400: have_solution = solve_for_y(yt,p0,p1,window_ULX()); 
+                     if (have_solution) {
+                        p0.x = window_ULX();
+                        p0.y = yt;
+                     }
+                     break;
+
+        case 0x0800: have_solution = solve_for_y(yt,p0,p1,window_ULX()); 
+                     if (have_solution) {
+                        p0.x = window_ULX();
+                        p0.y = yt;
+                     }
+                     have_solution &= solve_for_y(yt,p0,p1,window_LRX());
+                     if (have_solution) {
+                        p1.x = window_LRX();
+                        p1.y = yt;
+                     }
+                     break;
+
+        case 0x4800: have_solution = solve_for_y(yt,p0,p1,window_LRX());
+                     if (have_solution) {
+                        p1.x = window_LRX();
+                        p1.y = yt;
+                     }
+                     break;
+
+        case 0x1500: have_solution = solve_for_x(xt,p0,p1,window_ULY());
+                     if (have_solution) {
+                        p0.x = xt;
+                        p0.y = window_ULY();
+                     }
+                     have_solution &= solve_for_y(yt,p0,p1,window_LRX());
+                     if (have_solution) {
+                        p1.x = window_LRX();
+                        p1.y = yt;
+                     }
+                     break;
+
+        case 0x3700: have_solution = solve_for_y(yt,p0,p1,window_ULX()); 
+                     if (have_solution) {
+                        p0.x = window_ULX();
+                        p0.y = yt;
+                     }
+                     have_solution &= solve_for_x(xt,p0,p1,window_LRY());
+                     if (have_solution) {
+                        p1.x = xt;
+                        p1.y = window_LRY();
+                     }
+                     break;
+
+        case 0x2400: have_solution = solve_for_y(yt,p0,p1,window_LRX()); 
+                     if (have_solution) {
+                        p0.x = window_LRX();
+                        p0.y = yt;
+                     }
+                     break;
+
+        case 0x2600: have_solution = solve_for_y(yt,p0,p1,window_LRX()); 
+                     if (have_solution) {
+                        p0.x = window_LRX();
+                        p0.y = yt;
+                     }
+                     have_solution &= solve_for_y(yt,p0,p1,window_ULX()); 
+                     if (have_solution) {
+                        p1.x = window_ULX();
+                        p1.y = yt;
+                     }
+                     break;
+
+        case 0x4600: have_solution = solve_for_y(yt,p0,p1,window_ULX()); 
+                     if (have_solution) {
+                        p1.x = window_ULX();
+                        p1.y = yt;
+                     }
+                     break;
+
+        case 0x1300: have_solution = solve_for_x(xt,p0,p1,window_ULY());
+                     if (have_solution) {
+                        p0.x = xt;
+                        p0.y = window_ULY();
+                     }
+                     have_solution &= solve_for_y(yt,p0,p1,window_ULX());
+                     if (have_solution) {
+                        p1.x = window_ULX();
+                        p1.y = yt;
+                     }
+                     break;
+
+        case 0x5700: have_solution = solve_for_y(yt,p0,p1,window_LRX()); 
+                     if (have_solution) {
+                        p0.x = window_LRX();
+                        p0.y = yt;
+                     }
+                     have_solution &= solve_for_x(xt,p0,p1,window_LRY()); 
+                     if (have_solution) {
+                        p1.x = xt;
+                        p1.y = window_LRY();
+                     }
+                     break;
+
+        default: std::cerr << "Bad clip action: 0x" << std::hex << (int) clip_action << std::dec << "!!!" << std::endl;
             throw std::exception();
-        break;
+            break;
     }
 
     // clipping one end or the other of a line segment may result in a zero length segment...
@@ -237,6 +380,9 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
         code_p0 =  clip_code(p0);
         code_p1 =  clip_code(p1);
         have_solution = (code_p0 == code_p1) && (code_p0 == 0);
+        if (!have_solution)
+            std::cout << "\tafter clipping, no solution. p0? " << ((code_p0 == 0) ? "yes" : "no")
+                << ", p1? " << ((code_p1 == 0) ? "yes" : "no") << std::endl;
     }
 
     if (have_solution) {
@@ -253,7 +399,48 @@ unsigned astObj::clip_code(struct coordinate &p0) {
     //<< " window LRX,LRY: " << window_ULX() << "," << window_ULY() 
     //<< " LRX,LRY: " << window_LRX() << "," << window_LRY() 
     //<< std::endl;
-    return ((p0.y >= window_LRY()) << 3) | ((p0.y < window_ULY()) << 2) | ((p0.x >= window_LRX()) << 1) | (p0.x < window_ULX());
+    return ((p0.y >= window_bounds_LRY()) << 3) | ((p0.y < window_bounds_ULY()) << 2) | ((p0.x >= window_bounds_LRX()) << 1) | (p0.x < window_bounds_ULX());
+}
+
+/*
+                     pX                          
+    ------------------------------------    grid square
+    y >= 320    y < 0   x >= 480   x < 0    -----------
+       0          0         0        0          4      
+       0          0         0        1          3
+       0          0         1        0          5
+       0          0         1        1       invalid
+       0          1         0        0          1
+       0          1         0        1          0  
+       0          1         1        0          2   
+       0          1         1        1       invalid     
+       1          0         0        0          7
+       1          0         0        1          6 
+       1          0         1        0          8  
+       1          0         1        1       invalid 
+       1          1         0        0       invalid     
+       1          1         0        1       invalid     
+       1          1         1        0       invalid     
+       1          1         1        1       invalid
+*/
+
+int astObj::grid_index(unsigned int clip_code) {
+    int ci = -1;
+    switch((int) clip_code) {
+        case 0b0000: ci = 4; break;
+        case 0b0001: ci = 3; break;
+        case 0b0010: ci = 5; break;
+        case 0b0100: ci = 1; break;
+        case 0b0101: ci = 0; break;
+        case 0b0110: ci = 2; break;
+        case 0b1000: ci = 7; break;
+        case 0b1001: ci = 6; break;
+        case 0b1010: ci = 8; break;
+        default: std::cerr << "Bad grid case!!!" << std::endl;
+            throw std::exception();
+            break;
+    } 
+    return ci;
 }
 
 // using parametric form of line using two line segment endpoints, 

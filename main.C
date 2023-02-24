@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <time.h>
@@ -67,6 +68,49 @@ void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style)
           transposeX(p1x), transposeY(p1y), scolor(draw_color,draw_style));
 }
 
+#define BOX_SIZE 100
+
+void StartCoordinates(int &x, int &y, int &start_square) {
+  if (start_square < 0) {
+    //start_square = rand() % 9;
+    start_square = 4;
+  }
+
+  switch(start_square) {
+    case 0: x = 0 - (rand() % BOX_SIZE);            y = 0 - (rand() & BOX_SIZE); break;
+    case 1: x = (rand() % WINDOW_WIDTH);            y = 0 - (rand() & BOX_SIZE); break;
+    case 2: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = 0 - (rand() & BOX_SIZE); break;
+
+    case 3: x = 0 - (rand() % BOX_SIZE);            y = rand() % WINDOW_HEIGHT; break;
+    case 4: x = (rand() % WINDOW_WIDTH);            y = rand() % WINDOW_HEIGHT; break;
+    case 5: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = rand() % WINDOW_HEIGHT; break;
+
+    case 6: x = 0 - (rand() % BOX_SIZE);            y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
+    case 7: x = (rand() % WINDOW_WIDTH);            y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
+    case 8: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
+    default: break;
+  }
+
+  std::cout << "start square:" << start_square << ",x = " << x << ", y = " << y << std::endl;
+}
+
+void EndCoordinates(int &x, int &y, int &end_square, int start_square) {
+  switch(start_square) {
+    case 0: end_square = 8; break;
+    case 1: end_square = 5; break;
+    case 2: end_square = 3; break;
+    case 3: end_square = 2; break;
+    case 4: end_square = 0; break;
+    case 5: end_square = 6; break;
+    case 6: end_square = 1; break;
+    case 7: end_square = 0; break;
+    case 8: end_square = 1; break;
+    default: end_square = 4; break;
+  }
+  end_square = 4;
+  StartCoordinates(x,y,end_square);
+}
+
 int main() {
   std::cout << "Test astObj class..." << std::endl;
 
@@ -77,34 +121,54 @@ int main() {
   // this square is all in...
 
   my_outline.push_back(coordinate(0,0));
-  my_outline.push_back(coordinate(100,0));
-  my_outline.push_back(coordinate(100,100));
-  my_outline.push_back(coordinate(0,100));
+  my_outline.push_back(coordinate(BOX_SIZE,0));
+  my_outline.push_back(coordinate(BOX_SIZE,BOX_SIZE));
+  my_outline.push_back(coordinate(0,BOX_SIZE));
   my_outline.push_back(coordinate(0,0));
 
   std::cout << "On screen instance. move it a few times within screen..." << std::endl;
-  class astObj my_astobj(&my_outline,-50,270);
+  int startX, startY, startSquare = -1;
+  StartCoordinates(startX, startY, startSquare);
+  int endX, endY, endSquare;
+  EndCoordinates(endX, endY, endSquare, startSquare);
 
-  my_astobj.SetTrajectory(10, -10);
+  int dCount = 50;
+
+  int xIncr = (endX > startX) ? (endX - startX) / dCount : -(startX - endX) / dCount;
+  int yIncr = (endY > startY) ? (endY - startY) / dCount : -(startY - endY) / dCount;
+
+  std::cout << "xIncr:" << xIncr << ",yIncr:" << yIncr << std::endl;
+  
+  class astObj my_astobj(&my_outline,startX,startY);
+
+  my_astobj.SetTrajectory(xIncr,yIncr);
 
   tigrClear(screen, scolor(BLACK) ); //tigrRGB(0x80, 0x90, 0xa0));
   tigrPrint(screen, tfont, 120, 110, tigrRGB(0xff, 0xff, 0xff), "Hello, world.");
   put_up_grid();
 
-  //struct timespec st;
-  //clock_gettime(CLOCK_MONOTONIC, &st);
+  for(auto j = 0; j < 10; j++) {
 
-  for(auto i = 0; i < 40; i++) {
-    put_up_grid();
-    my_astobj.Advance();
-    tigrUpdate(screen);
+    for (auto i = 0; i < dCount; i++) {
+      put_up_grid();
 
-    sleep(1);
-    //struct timespec se;
-    //while (st.tv_sec <= se.tv_sec) {
-    //  clock_gettime(CLOCK_MONOTONIC, &se);
-    //}
-    //std::cout << "<<<" << se.tv_sec << ">>>" << std::endl;
+      std::cout << "PASS " << i << std::endl;
+
+      my_astobj.Advance();
+      tigrUpdate(screen);
+
+      usleep(50000);
+    }
+
+    StartCoordinates(startX, startY, startSquare);
+    EndCoordinates(endX, endY, endSquare, startSquare);
+
+    xIncr = (endX > startX) ? (endX - startX) / dCount : -(startX - endX) / dCount;
+    yIncr = (endY > startY) ? (endY - startY) / dCount : -(startY - endY) / dCount;
+
+    std::cout << "xIncr:" << xIncr << ",yIncr:" << yIncr << std::endl;
+    my_astobj.SetOrigin(startX,startY);
+    my_astobj.SetTrajectory(xIncr,yIncr);
   }
 
   while (!tigrClosed(screen)) {
@@ -112,39 +176,6 @@ int main() {
   }
 
   tigrFree(screen);
-
-  return 0;
-  my_astobj.DumpLineSegments();
-  std::cout << std::endl;
-
-  my_astobj.Advance();
-  my_astobj.DumpLineSegments();
-  std::cout << std::endl;
-
-  my_astobj.Advance();
-  my_astobj.DumpLineSegments();
-  std::cout << std::endl;
-  
-  std::cout << "Off screen instance. better not show up..." << std::endl;
-
-  class astObj my_astobj2(&my_outline,-100,-100);
-  my_astobj2.Advance();
-  my_astobj2.DumpLineSegments();
-  std::cout << std::endl;
-
-  std::cout << "Now set trajectory to advance this hidden instance onto screen..." << std::endl;
-
-  my_astobj2.SetTrajectory(100, 100);
-  my_astobj2.Advance();
-  my_astobj2.DumpLineSegments();
-  std::cout << std::endl;
-
-  std::cout << "Now set trajectory to cause object to move left, partially off screen..." << std::endl;
-
-  my_astobj2.SetTrajectory(-10, 0);
-  my_astobj2.Advance();
-  my_astobj2.DumpLineSegments();
-  std::cout << std::endl;
 
   return 0;
 }
