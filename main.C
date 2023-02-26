@@ -75,18 +75,18 @@ void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style)
 
 void StartCoordinates(int &x, int &y, int &start_square) {
   if (start_square < 0) {
-    start_square = rand() % 9;
+    while(start_square != 4) {    // ugly...
+      start_square = rand() % 9;
+    }
   }
 
   switch(start_square) {
     case 0: x = 0 - (rand() % BOX_SIZE);            y = 0 - (rand() & BOX_SIZE); break;
     case 1: x = (rand() % WINDOW_WIDTH);            y = 0 - (rand() & BOX_SIZE); break;
     case 2: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = 0 - (rand() & BOX_SIZE); break;
-
     case 3: x = 0 - (rand() % BOX_SIZE);            y = rand() % WINDOW_HEIGHT; break;
     case 4: x = (rand() % WINDOW_WIDTH);            y = rand() % WINDOW_HEIGHT; break;
     case 5: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = rand() % WINDOW_HEIGHT; break;
-
     case 6: x = 0 - (rand() % BOX_SIZE);            y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
     case 7: x = (rand() % WINDOW_WIDTH);            y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
     case 8: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
@@ -167,7 +167,7 @@ int main() {
       my_astobj.Advance();
       tigrUpdate(screen);
 
-      usleep(50000);
+      usleep(10000);
     }
 
     StartCoordinates(startX, startY, startSquare);
