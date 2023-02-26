@@ -9,69 +9,9 @@
 #include <unistd.h>
 
 #include <ast_obj.h>
-#include <tigr.h>
+#include <display.h>
 
-#define SCREEN_WIDTH  1024
-#define SCREEN_HEIGHT 1024 
-
-#ifndef WINDOW_WIDTH
-#define WINDOW_WIDTH  480
-#endif
-#ifndef WINDOW_HEIGHT
-#define WINDOW_HEIGHT 320
-#endif
-
-#define WINDOW_X_OFFSET (SCREEN_WIDTH - WINDOW_WIDTH) / 2
-#define WINDOW_Y_OFFSET (SCREEN_HEIGHT - WINDOW_HEIGHT) / 2
-#define WINDOW_ULX WINDOW_X_OFFSET
-#define WINDOW_ULY WINDOW_Y_OFFSET + WINDOW_HEIGHT
-#define WINDOW_LRX WINDOW_X_OFFSET + WINDOW_WIDTH
-#define WINDOW_LRY WINDOW_Y_OFFSET
-
-#define WHITE 0
-#define BLACK 1
-#define RED   2
-#define GREEN 3
-#define BLUE  4
-#define GREY  5
-
-TPixel scolor(int wcolor, int wstyle = 0) {
-  TPixel rc;
-  switch(wcolor) {
-    case WHITE: rc = tigrRGB(0xff, 0xff, 0xff); break;
-    case BLACK: rc = tigrRGB(0, 0, 0); break;
-    case RED:   rc = tigrRGB(0xff, 0, 0); break;
-    case GREEN: rc = tigrRGB(0, 0xff, 0); break;
-    case BLUE:  rc = tigrRGB(0, 0, 0xff); break;
-    case GREY:  rc = tigrRGB(0x7f, 0x7f, 0x7f); break;
-    default: break;
-  }
-  return rc;
-}
-
-Tigr *screen = NULL;
-
-void put_up_grid() {
-  tigrLine(screen, 0, WINDOW_ULY, SCREEN_WIDTH - 1, WINDOW_ULY, scolor(GREY));
-  tigrLine(screen, 0, WINDOW_LRY, SCREEN_WIDTH - 1, WINDOW_LRY, scolor(GREY));
-
-  tigrLine(screen, WINDOW_ULX, 0, WINDOW_ULX, SCREEN_HEIGHT - 1, scolor(GREY));
-  tigrLine(screen, WINDOW_LRX, 0, WINDOW_LRX, SCREEN_HEIGHT - 1, scolor(GREY));
-}
-
-int transposeX(int x) {
-  return WINDOW_X_OFFSET + x;
-}
-int transposeY(int y) {
-  return WINDOW_Y_OFFSET + (WINDOW_HEIGHT - y);
-}
-
-void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style) {
-  tigrLine(screen, transposeX(p0x), transposeY(p0y), 
-          transposeX(p1x), transposeY(p1y), scolor(draw_color,draw_style));
-}
-
-#define BOX_SIZE 100
+#define MY_DEBUG
 
 void StartCoordinates(int &x, int &y, int &start_square) {
   if (start_square < 0) {
@@ -93,7 +33,9 @@ void StartCoordinates(int &x, int &y, int &start_square) {
     default: break;
   }
 
+#ifdef MY_DEBUG
   std::cout << "start square:" << start_square << ",x = " << x << ", y = " << y << std::endl;
+  #endif
 }
 
 void EndCoordinates(int &x, int &y, int &end_square, int start_square) {
@@ -123,17 +65,17 @@ void XYincrements(int &xIncr, int &yIncr, int startX, int startY, int endX, int 
 #define ASTEROID1 DOT(60,0), DOT(100,10), DOT(120,50), DOT(90,80), DOT(60,70), DOT(50,90), DOT(20,60), DOT(40,40), DOT(30,30), DOT(60,0)
 
 int main() {
+#ifdef MY_DEBUG
   std::cout << "Test astObj class..." << std::endl;
+#endif
 
-  screen = tigrWindow(1024,1024,"Hello", 0);
-  tigrClear(screen, scolor(BLACK) ); //tigrRGB(0x80, 0x90, 0xa0));
-  tigrPrint(screen, tfont, 120, 110, tigrRGB(0xff, 0xff, 0xff), "Hello, world.");
-  put_up_grid();
-
+  InitializeDisplay();
 
   std::vector<struct coordinate> my_outline{ ASTEROID1 };
 
+#ifdef MY_DEBUG
   std::cout << "On screen instance. move it a few times within screen..." << std::endl;
+#endif
 
   int startX, startY, startSquare = -1;
   StartCoordinates(startX, startY, startSquare);
@@ -147,8 +89,10 @@ int main() {
 
   XYincrements(xIncr,yIncr,startX,startY,endX,endY,dCount);
 
+#ifdef MY_DEBUG
   std::cout << "xIncr:" << xIncr << ",yIncr:" << yIncr << std::endl;
-  
+#endif
+
   class astObj my_astobj(&my_outline,startX,startY);
 
   my_astobj.SetTrajectory(xIncr,yIncr);
@@ -156,18 +100,16 @@ int main() {
   
   bool do_test = true;
 
-  //for(auto j = 0; j < 20; j++) {
-    
   while(do_test) {
     for (auto i = 0; i < dCount; i++) {
-      put_up_grid();
-
+#ifdef MY_DEBUG
       std::cout << "PASS " << i << std::endl;
-
+#endif
       my_astobj.Advance();
-      tigrUpdate(screen);
 
-      usleep(10000);
+      UpdateDisplay();
+
+      DrawDelay();
     }
 
     StartCoordinates(startX, startY, startSquare);
@@ -176,17 +118,14 @@ int main() {
     xIncr = (endX > startX) ? (endX - startX) / dCount : -(startX - endX) / dCount;
     yIncr = (endY > startY) ? (endY - startY) / dCount : -(startY - endY) / dCount;
 
+#ifdef MY_DEBUG
     std::cout << "xIncr:" << xIncr << ",yIncr:" << yIncr << std::endl;
+#endif
     my_astobj.SetOrigin(startX,startY);
     my_astobj.SetTrajectory(xIncr,yIncr);
   }
 
-
-  while (!tigrClosed(screen)) {
-        tigrUpdate(screen);
-  }
-
-  tigrFree(screen);
+  CloseDisplay();
 
   return 0;
 }

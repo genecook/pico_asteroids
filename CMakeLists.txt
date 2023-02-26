@@ -13,5 +13,5 @@ set(CMAKE_EXE_LINKER_FLAGS "-framework OpenGL -framework Cocoa")
 
 include_directories(${CMAKE_SOURCE_DIR} $ENV{PROJECTS_PATH}/tigr)
 
-add_executable(test_astobj main.C ast_obj.C ${TIGR_DIR}/tigr.C)
+add_executable(test_astobj main.C ast_obj.C display.C ${TIGR_DIR}/tigr.C)
 
