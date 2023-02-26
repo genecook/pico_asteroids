@@ -159,6 +159,7 @@ class astObj {
 
     unsigned clip_code(struct coordinate &p0);
     int grid_index(unsigned int clip_code);
+    bool flip_line_segment(unsigned int code_p0, unsigned int code_p1);
 
     bool solve_for_x(unsigned &xt, struct coordinate &p0,struct coordinate &p1, unsigned yt);
     bool solve_for_y(unsigned &yt, struct coordinate &p0,struct coordinate &p1, unsigned xt);

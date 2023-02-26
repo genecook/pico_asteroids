@@ -111,21 +111,27 @@ void EndCoordinates(int &x, int &y, int &end_square, int start_square) {
   StartCoordinates(x,y,end_square);
 }
 
+#define DOT(X,Y) coordinate(X,Y)
+#define SQUARE(SIZE) DOT(0,0), DOT(SIZE,0), DOT(SIZE,SIZE), DOT(0,SIZE), DOT(0,0)
+#define TRIANGLE(SIZE) DOT(SIZE,0), DOT(SIZE,SIZE/2), DOT(0,SIZE/2), DOT(SIZE/2,0)
+#define HEXAGON(SIZE) DOT(0,SIZE/2), DOT(SIZE/2,0), DOT(SIZE,0), DOT(SIZE + SIZE/2,SIZE/2), DOT(SIZE,SIZE), DOT(SIZE/2,SIZE), DOT(0,SIZE/2)
+#define STAR DOT(0,30), DOT(120,30), DOT(20,100), DOT(60,0), DOT(100,100), DOT(0,30)
+#define ASTEROID1 DOT(60,0), DOT(100,10), DOT(120,50), DOT(90,80), DOT(60,70), DOT(50,90), DOT(20,60), DOT(40,40), DOT(30,30), DOT(60,0)
 int main() {
   std::cout << "Test astObj class..." << std::endl;
 
   screen = tigrWindow(1024,1024,"Hello", 0);
 
-  std::vector<struct coordinate> my_outline;
+  std::vector<struct coordinate> my_outline{ ASTEROID1 };
 
   // this square is all in...
-
+/*
   my_outline.push_back(coordinate(0,0));
   my_outline.push_back(coordinate(BOX_SIZE,0));
   my_outline.push_back(coordinate(BOX_SIZE,BOX_SIZE));
   my_outline.push_back(coordinate(0,BOX_SIZE));
   my_outline.push_back(coordinate(0,0));
-
+*/
   std::cout << "On screen instance. move it a few times within screen..." << std::endl;
   int startX, startY, startSquare = -1;
   StartCoordinates(startX, startY, startSquare);

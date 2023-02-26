@@ -51,7 +51,7 @@ void astObj::Translate() {
         }
         os1 = *ix;
         os1 += at_origin ? origin : origin + trajectory_coord;
-
+/*
         struct coordinate p0, p1;
         if ( (os0.x > os1.x) || (os0.y > os1.y) ) {
             p0 = os1;
@@ -60,6 +60,9 @@ void astObj::Translate() {
             p0 = os0;
             p1 = os1;
         }
+*/
+        struct coordinate p0 = os0, p1 = os1;
+
         if (ClipLineSegment(p0,p1)) {
             line_segments_screen.push_back( line_segment(p0,p1) );
             std::cout << "\tp0 x,y: " << p0.x << "," << p0.y << " --> p1 x,y: " << p1.x << "," << p1.y << "\n" << std::endl;
@@ -148,12 +151,20 @@ void astObj::Translate() {
 bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
     std::cout << "\t(ClipLineSegment)" << "p0 x,y: " << p0.x << "," << p0.y
             << " --> p1 x,y: " << p1.x << "," << p1.y << "???" << std::endl;
-    // calculations assume line segment is ascending from p0 to p1...
-
+    
     // NOTE: for our screen, origin is at upper left hand corner...
-
+    // calculations assume line segment is ascending from p0 to p1...
+   
     unsigned code_p0 =  clip_code(p0);
     unsigned code_p1 =  clip_code(p1);
+    
+    if (flip_line_segment(code_p0,code_p1)) {
+        struct coordinate px = p0;
+        p0 = p1;
+        p1 = px;
+        code_p0 =  clip_code(p0);
+        code_p1 =  clip_code(p1);
+    }
 
     unsigned clip_case = (code_p0<<4) | code_p1;
 
@@ -174,6 +185,7 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
         return false; // the line segment is completely outside the window...
     }
 
+    
     // the line may or may not cross the window...
 
     unsigned xt, yt;
@@ -259,8 +271,6 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
                      break;
 
         case 0x4710: p1.y = window_LRY();
-
-           std::cout << "\t!!! P1 x,y: " << p1.x << "," << p1.y << std::endl;
                      break;
 
         case 0x0400: have_solution = solve_for_y(yt,p0,p1,window_ULX()); 
@@ -441,6 +451,19 @@ int astObj::grid_index(unsigned int clip_code) {
             break;
     } 
     return ci;
+}
+
+bool astObj::flip_line_segment(unsigned int code_p0, unsigned int code_p1) {
+    switch( (grid_index(code_p0) << 4) | grid_index(code_p1) ) {
+    case 0x54:
+    case 0x74: 
+    case 0x84:
+    case 0x75:
+        return true; break;
+    
+    default: break;
+    }
+    return false;
 }
 
 // using parametric form of line using two line segment endpoints, 
