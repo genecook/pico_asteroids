@@ -469,6 +469,8 @@ bool astObj::flip_line_segment(unsigned int code_p0, unsigned int code_p1) {
     case 0x40:
     case 0x42:
     case 0x73:
+    case 0x64:
+    case 0x51:
         return true; break;
     
     default: break;

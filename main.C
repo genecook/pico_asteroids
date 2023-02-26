@@ -154,9 +154,11 @@ int main() {
   my_astobj.SetTrajectory(xIncr,yIncr);
 
   
+  bool do_test = true;
 
-  for(auto j = 0; j < 20; j++) {
-
+  //for(auto j = 0; j < 20; j++) {
+    
+  while(do_test) {
     for (auto i = 0; i < dCount; i++) {
       put_up_grid();
 
@@ -178,6 +180,7 @@ int main() {
     my_astobj.SetOrigin(startX,startY);
     my_astobj.SetTrajectory(xIncr,yIncr);
   }
+
 
   while (!tigrClosed(screen)) {
         tigrUpdate(screen);
