@@ -11,7 +11,7 @@
 #include <ast_obj.h>
 #include <display.h>
 
-#define MY_DEBUG
+//#define MY_DEBUG
 
 void StartCoordinates(int &x, int &y, int &start_square) {
   if (start_square < 0) {

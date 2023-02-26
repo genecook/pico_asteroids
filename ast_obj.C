@@ -4,6 +4,8 @@
 #include <cassert>
 #include <exception>
 
+//#define ASTOBJ_DEBUG
+
 extern void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style);
 
 bool operator== (const struct coordinate &p0, const struct coordinate &p1) {
@@ -32,10 +34,12 @@ bool astObj::AHit(struct coordinate projectile) {
 }
 
 void astObj::DumpLineSegments() {
+#ifdef ASTOBJ_DEBUG
     for(auto ix = line_segments_screen.begin(); ix != line_segments_screen.end(); ix++) {
         std::cout << "p0 x,y: " << (*ix).p0.x << "," << (*ix).p0.y
             << " --> p1 x,y: " << (*ix).p1.x << "," << (*ix).p1.y << std::endl;
     }
+#endif
 }
 
 // translate object outline into set of on-screen line segments...
@@ -51,21 +55,14 @@ void astObj::Translate() {
         }
         os1 = *ix;
         os1 += at_origin ? origin : origin + trajectory_coord;
-/*
-        struct coordinate p0, p1;
-        if ( (os0.x > os1.x) || (os0.y > os1.y) ) {
-            p0 = os1;
-            p1 = os0;
-        } else {
-            p0 = os0;
-            p1 = os1;
-        }
-*/
+
         struct coordinate p0 = os0, p1 = os1;
 
         if (ClipLineSegment(p0,p1)) {
             line_segments_screen.push_back( line_segment(p0,p1) );
+#ifdef ASTOBJ_DEBUG
             std::cout << "\tp0 x,y: " << p0.x << "," << p0.y << " --> p1 x,y: " << p1.x << "," << p1.y << "\n" << std::endl;
+#endif
         }
 
         os0 = os1;
@@ -149,9 +146,11 @@ void astObj::Translate() {
 */
 
 bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
+#ifdef ASTOBJ_DEBUG
     std::cout << "\t(ClipLineSegment)" << "p0 x,y: " << p0.x << "," << p0.y
             << " --> p1 x,y: " << p1.x << "," << p1.y << "???" << std::endl;
-    
+#endif
+
     // NOTE: for our screen, origin is at upper left hand corner...
     // calculations assume line segment is ascending from p0 to p1...
    
@@ -172,20 +171,24 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
     std::bitset<4> code_p1_bits(code_p1);
     std::bitset<8> clip_case_bits(clip_case);
 
+#ifdef ASTOBJ_DEBUG
     std::cout << "\tclip-case: 0x" <<std::hex << clip_case << std::dec  
             << "(p0: 0b" << code_p0_bits << " p1: 0b" << code_p1_bits << ")" << std::endl;
-
+#endif
     if ( (code_p0 == code_p1) && (code_p0 == 0) ) {
+#ifdef ASTOBJ_DEBUG
         std::cout << "\tboth endpoints are within the (screen) window...\n" << std::endl;
+#endif
         return true; // both endpoints are within the (screen) window...
     }
 
     if ( (code_p0 & code_p1) != 0 ) {
+#ifdef ASTOBJ_DEBUG
         std::cout << "\tthe line segment is completely outside the window...\n" << std::endl;
+#endif
         return false; // the line segment is completely outside the window...
     }
 
-    
     // the line may or may not cross the window...
 
     unsigned xt, yt;
@@ -197,9 +200,9 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
     // A coordinate is 'good' if it is within the windows (screens) boundary
 
     unsigned int clip_action = (grid_index(code_p0)<<12) | (grid_index(code_p1)<<8) | ((p0.x==p1.x)<<4) | (p0.y==p1.y);
-
+#ifdef ASTOBJ_DEBUG
     std::cout << "\tclip action: 0x" << std::hex << clip_action << std::dec << std::endl;
-
+#endif
     switch( (int) clip_action) {
         case 0x3400: have_solution = solve_for_y(yt,p0,p1,window_ULX());
                      if (have_solution) {
@@ -381,7 +384,9 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
     // clipping one end or the other of a line segment may result in a zero length segment...
 
     if (have_solution && (p0 == p1)) {
+#ifdef ASTOBJ_DEBUG
         std::cout << "\tline clipping results in zero-length line..." << std::endl;
+#endif
         have_solution = false;
     }
     
@@ -390,16 +395,20 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
         code_p0 =  clip_code(p0);
         code_p1 =  clip_code(p1);
         have_solution = (code_p0 == code_p1) && (code_p0 == 0);
-        if (!have_solution)
+        if (!have_solution) {
+#ifdef ASTOBJ_DEBUG
             std::cout << "\tafter clipping, no solution. p0? " << ((code_p0 == 0) ? "yes" : "no")
                 << ", p1? " << ((code_p1 == 0) ? "yes" : "no") << std::endl;
+#endif
+        }
     }
-
+#ifdef ASTOBJ_DEBUG
     if (have_solution) {
         std::cout << "\thave solution!" << std::endl;
     } else {
         std::cout << "\tno solution!\n" << std::endl;
     }
+#endif
 
     return have_solution;
 }
