@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <random>
 #include <time.h>
 #include <unistd.h>
 
@@ -72,8 +75,7 @@ void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style)
 
 void StartCoordinates(int &x, int &y, int &start_square) {
   if (start_square < 0) {
-    //start_square = rand() % 9;
-    start_square = 4;
+    start_square = rand() % 9;
   }
 
   switch(start_square) {
@@ -95,20 +97,22 @@ void StartCoordinates(int &x, int &y, int &start_square) {
 }
 
 void EndCoordinates(int &x, int &y, int &end_square, int start_square) {
-  switch(start_square) {
-    case 0: end_square = 8; break;
-    case 1: end_square = 5; break;
-    case 2: end_square = 3; break;
-    case 3: end_square = 2; break;
-    case 4: end_square = 0; break;
-    case 5: end_square = 6; break;
-    case 6: end_square = 1; break;
-    case 7: end_square = 0; break;
-    case 8: end_square = 1; break;
-    default: end_square = 4; break;
+  std::vector<int> end_square_choices;
+
+  for (auto i = 0; i < 9; i++) {
+    if (i != start_square)
+      end_square_choices.push_back(i);
   }
-  end_square = 4;
+
+  std::shuffle(end_square_choices.begin(), end_square_choices.end(), std::random_device());
+  end_square = end_square_choices[0];
+
   StartCoordinates(x,y,end_square);
+}
+
+void XYincrements(int &xIncr, int &yIncr, int startX, int startY, int endX, int endY, int dCount) {
+  xIncr = (endX > startX) ? (endX - startX) / dCount : -(startX - endX) / dCount;
+  yIncr = (endY > startY) ? (endY - startY) / dCount : -(startY - endY) / dCount;
 }
 
 #define DOT(X,Y) coordinate(X,Y)
@@ -117,31 +121,31 @@ void EndCoordinates(int &x, int &y, int &end_square, int start_square) {
 #define HEXAGON(SIZE) DOT(0,SIZE/2), DOT(SIZE/2,0), DOT(SIZE,0), DOT(SIZE + SIZE/2,SIZE/2), DOT(SIZE,SIZE), DOT(SIZE/2,SIZE), DOT(0,SIZE/2)
 #define STAR DOT(0,30), DOT(120,30), DOT(20,100), DOT(60,0), DOT(100,100), DOT(0,30)
 #define ASTEROID1 DOT(60,0), DOT(100,10), DOT(120,50), DOT(90,80), DOT(60,70), DOT(50,90), DOT(20,60), DOT(40,40), DOT(30,30), DOT(60,0)
+
 int main() {
   std::cout << "Test astObj class..." << std::endl;
 
   screen = tigrWindow(1024,1024,"Hello", 0);
+  tigrClear(screen, scolor(BLACK) ); //tigrRGB(0x80, 0x90, 0xa0));
+  tigrPrint(screen, tfont, 120, 110, tigrRGB(0xff, 0xff, 0xff), "Hello, world.");
+  put_up_grid();
+
 
   std::vector<struct coordinate> my_outline{ ASTEROID1 };
 
-  // this square is all in...
-/*
-  my_outline.push_back(coordinate(0,0));
-  my_outline.push_back(coordinate(BOX_SIZE,0));
-  my_outline.push_back(coordinate(BOX_SIZE,BOX_SIZE));
-  my_outline.push_back(coordinate(0,BOX_SIZE));
-  my_outline.push_back(coordinate(0,0));
-*/
   std::cout << "On screen instance. move it a few times within screen..." << std::endl;
+
   int startX, startY, startSquare = -1;
   StartCoordinates(startX, startY, startSquare);
-  int endX, endY, endSquare;
+
+  int endX, endY, endSquare = -1;
   EndCoordinates(endX, endY, endSquare, startSquare);
 
-  int dCount = 50;
+  int dCount = 40;
 
-  int xIncr = (endX > startX) ? (endX - startX) / dCount : -(startX - endX) / dCount;
-  int yIncr = (endY > startY) ? (endY - startY) / dCount : -(startY - endY) / dCount;
+  int xIncr, yIncr;
+
+  XYincrements(xIncr,yIncr,startX,startY,endX,endY,dCount);
 
   std::cout << "xIncr:" << xIncr << ",yIncr:" << yIncr << std::endl;
   
@@ -149,11 +153,9 @@ int main() {
 
   my_astobj.SetTrajectory(xIncr,yIncr);
 
-  tigrClear(screen, scolor(BLACK) ); //tigrRGB(0x80, 0x90, 0xa0));
-  tigrPrint(screen, tfont, 120, 110, tigrRGB(0xff, 0xff, 0xff), "Hello, world.");
-  put_up_grid();
+  
 
-  for(auto j = 0; j < 10; j++) {
+  for(auto j = 0; j < 20; j++) {
 
     for (auto i = 0; i < dCount; i++) {
       put_up_grid();

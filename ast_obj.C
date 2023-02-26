@@ -453,12 +453,22 @@ int astObj::grid_index(unsigned int clip_code) {
     return ci;
 }
 
+int astObj::grid_square(struct coordinate p) {
+    return grid_index(clip_code(p));
+}
+
 bool astObj::flip_line_segment(unsigned int code_p0, unsigned int code_p1) {
     switch( (grid_index(code_p0) << 4) | grid_index(code_p1) ) {
     case 0x54:
     case 0x74: 
     case 0x84:
     case 0x75:
+    case 0x43:
+    case 0x41:
+    case 0x31:
+    case 0x40:
+    case 0x42:
+    case 0x73:
         return true; break;
     
     default: break;
