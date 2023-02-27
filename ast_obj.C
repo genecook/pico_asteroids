@@ -376,8 +376,11 @@ bool astObj::ClipLineSegment(struct coordinate &p0,struct coordinate &p1) {
                      }
                      break;
 
-        default: std::cerr << "Bad clip action: 0x" << std::hex << (int) clip_action << std::dec << "!!!" << std::endl;
+        default: 
+#ifdef ASTOBJ_DEBUG
+            std::cerr << "Bad clip action: 0x" << std::hex << (int) clip_action << std::dec << "!!!" << std::endl;
             throw std::exception();
+#endif
             break;
     }
 
@@ -455,8 +458,11 @@ int astObj::grid_index(unsigned int clip_code) {
         case 0b1000: ci = 7; break;
         case 0b1001: ci = 6; break;
         case 0b1010: ci = 8; break;
-        default: std::cerr << "Bad grid case!!!" << std::endl;
+        default: 
+#ifdef ASTOBJ_DEBUG
+            std::cerr << "Bad grid case!!!" << std::endl;
             throw std::exception();
+#endif
             break;
     } 
     return ci;
