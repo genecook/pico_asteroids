@@ -1,5 +1,13 @@
 #ifndef __DISPLAY__
 
+#ifdef PICO_DISPLAY
+#include "LCD_Driver.h"
+#include "LCD_Touch.h"
+#include "LCD_GUI.h"
+#include "LCD_Bmp.h"
+#include "DEV_Config.h"
+#endif
+
 #define SCREEN_WIDTH  1024
 #define SCREEN_HEIGHT 1024 
 

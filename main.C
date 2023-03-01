@@ -1,5 +1,18 @@
-#include <stdio.h>
+#ifdef FOR_PICO
+#include "main.h"
+#include "pico/stdlib.h"
+#include "hardware/watchdog.h"
+
+extern "C" {
+#include <lcd_touch_wrapper.h>
+}
+
+#else
 #include <stdlib.h>
+#endif
+
+#include <stdio.h>
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -8,8 +21,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <ast_obj.h>
 #include <display.h>
+#include <ast_obj.h>
 
 //#define MY_DEBUG
 
@@ -67,6 +80,11 @@ void XYincrements(int &xIncr, int &yIncr, int startX, int startY, int endX, int 
 int main() {
 #ifdef MY_DEBUG
   std::cout << "Test astObj class..." << std::endl;
+#endif
+
+#ifdef FOR_PICO
+  lcd_touch_startup();
+  clear_screen();
 #endif
 
   InitializeDisplay();

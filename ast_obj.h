@@ -2,8 +2,11 @@
 
 #include <vector>
 
+#ifndef PICO_DISPLAY
 #define WHITE 0
 #define BLACK 1
+#endif
+
 #define SOLID 1
 
 struct coordinate {
