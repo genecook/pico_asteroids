@@ -8,6 +8,8 @@ if (DEFINED DO_PICO)
     # this include has to happen BEFORE the project statement in order
     # to pick up the correct C compiler, etc. for targeting the pico...
     include(pico_sdk_import)
+   # use shell variable and/or update this path to reflect where you
+    # have unpacked the Waveshare LCD code:
     set(PICO_LCD_LIB $ENV{PICO_LCD_LIB})
     set(PROJECTS_PATH $ENV{PROJECTS_PATH})
     set(MY_PICO_GUI $ENV{PROJECTS_PATH}/pico_gui)
@@ -15,6 +17,7 @@ endif()
 
 project(asteroids C CXX ASM)
 
+# tigr - mac os/x specific easy-to-use graphics lib:
 set(TIGR_DIR $ENV{PROJECTS_PATH}/tigr)
 
 set(CMAKE_BUILD_TYPE Release)
@@ -25,10 +28,8 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(${CMAKE_SOURCE_DIR} $ENV{PROJECTS_PATH}/tigr)
 
 if (DEFINED DO_PICO)
+    # raspberry pi pico build...
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -DPICO_DISPLAY -DFOR_PICO")
-
-    # use shell variable and/or update this path to reflect where you
-    # have unpacked the Waveshare LCD code:
 
     pico_sdk_init()
 
@@ -57,7 +58,8 @@ if (DEFINED DO_PICO)
     pico_enable_stdio_uart(test_astobj 1)
     # create map/bin/hex/uf2 file etc.
     pico_add_extra_outputs(test_astobj)
-else()
+else() 
+    # mac os/x build...
     set(CMAKE_EXE_LINKER_FLAGS "-framework OpenGL -framework Cocoa")
     add_executable(test_astobj main.C ast_obj.C display.C ${TIGR_DIR}/tigr.C)
 endif()

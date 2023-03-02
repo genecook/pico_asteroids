@@ -1,7 +1,7 @@
 #ifdef FOR_PICO
 #include "main.h"
-#include "pico/stdlib.h"
-#include "hardware/watchdog.h"
+//#include "pico/stdlib.h"
+//#include "hardware/watchdog.h"
 
 extern "C" {
 #include <lcd_touch_wrapper.h>
@@ -80,11 +80,6 @@ void XYincrements(int &xIncr, int &yIncr, int startX, int startY, int endX, int 
 int main() {
 #ifdef MY_DEBUG
   std::cout << "Test astObj class..." << std::endl;
-#endif
-
-#ifdef FOR_PICO
-  lcd_touch_startup();
-  clear_screen();
 #endif
 
   InitializeDisplay();

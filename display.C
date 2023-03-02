@@ -4,7 +4,19 @@
 extern "C" {
 #include <lcd_touch_wrapper.h>
 }
+
+void put_up_grid() {
+  // not a grid but window border...
+  DrawLine(10, 10, WINDOW_WIDTH - 1, 10, RED,LINE_SOLID);
+  DrawLine(WINDOW_WIDTH - 1, 10, WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1, RED,LINE_SOLID);
+  DrawLine(WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1, 10, WINDOW_HEIGHT - 1, RED,LINE_SOLID);
+  DrawLine(0, WINDOW_HEIGHT - 1, 10,10, RED,LINE_SOLID);
+}
+
 void InitializeDisplay() {
+  lcd_touch_startup();
+  clear_screen();
+  put_up_grid();
 }
 
 void DrawDelay() {
