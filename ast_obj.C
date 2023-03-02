@@ -75,7 +75,7 @@ void astObj::Translate() {
     at_origin = false;
 }
 
-// clip either end or both ends of line segment (if possible) to display screen,
+// clip either end or both ends of line segment (if possible) to window,
 // return true if there is a solution...
 //
 // My version of Cohen-Sutherland line clipping.

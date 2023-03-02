@@ -2,7 +2,7 @@
 #include "main.h"
 //#include "pico/stdlib.h"
 //#include "hardware/watchdog.h"
-
+#include "pico/stdlib.h"
 extern "C" {
 #include <lcd_touch_wrapper.h>
 }
@@ -28,21 +28,22 @@ extern "C" {
 
 void StartCoordinates(int &x, int &y, int &start_square) {
   if (start_square < 0) {
-    while(start_square != 4) {    // ugly...
-      start_square = rand() % 9;
-    }
+    start_square = rand() / (RAND_MAX / 9 + 1);
   }
 
   switch(start_square) {
     case 0: x = 0 - (rand() % BOX_SIZE);            y = 0 - (rand() & BOX_SIZE); break;
     case 1: x = (rand() % WINDOW_WIDTH);            y = 0 - (rand() & BOX_SIZE); break;
     case 2: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = 0 - (rand() & BOX_SIZE); break;
+
     case 3: x = 0 - (rand() % BOX_SIZE);            y = rand() % WINDOW_HEIGHT; break;
     case 4: x = (rand() % WINDOW_WIDTH);            y = rand() % WINDOW_HEIGHT; break;
     case 5: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = rand() % WINDOW_HEIGHT; break;
+
     case 6: x = 0 - (rand() % BOX_SIZE);            y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
     case 7: x = (rand() % WINDOW_WIDTH);            y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
     case 8: x = WINDOW_WIDTH + (rand() % BOX_SIZE); y = rand() % (WINDOW_HEIGHT + BOX_SIZE); break;
+
     default: break;
   }
 
@@ -55,8 +56,7 @@ void EndCoordinates(int &x, int &y, int &end_square, int start_square) {
   std::vector<int> end_square_choices;
 
   for (auto i = 0; i < 9; i++) {
-    if (i != start_square)
-      end_square_choices.push_back(i);
+     end_square_choices.push_back(i);
   }
 
   std::shuffle(end_square_choices.begin(), end_square_choices.end(), std::random_device());
@@ -78,6 +78,10 @@ void XYincrements(int &xIncr, int &yIncr, int startX, int startY, int endX, int 
 #define ASTEROID1 DOT(60,0), DOT(100,10), DOT(120,50), DOT(90,80), DOT(60,70), DOT(50,90), DOT(20,60), DOT(40,40), DOT(30,30), DOT(60,0)
 
 int main() {
+#ifdef FOR_PICO
+  stdio_init_all();
+#endif
+
 #ifdef MY_DEBUG
   std::cout << "Test astObj class..." << std::endl;
 #endif
@@ -88,6 +92,12 @@ int main() {
 
 #ifdef MY_DEBUG
   std::cout << "On screen instance. move it a few times within screen..." << std::endl;
+#endif
+
+#ifdef FOR_PICO
+  // how to set initial random seed on pico???
+#else
+  sranddev();
 #endif
 
   int startX, startY, startSquare = -1;
@@ -125,6 +135,7 @@ int main() {
       DrawDelay();
     }
 
+    startSquare = -1;
     StartCoordinates(startX, startY, startSquare);
     EndCoordinates(endX, endY, endSquare, startSquare);
 
