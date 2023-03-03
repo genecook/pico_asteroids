@@ -49,7 +49,7 @@ if (DEFINED DO_PICO)
 
     include_directories(${PROJECTS_PATH}/pico_gui)
 
-    add_executable(test_astobj main.C ast_obj.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
+    add_executable(test_astobj main.C asteroid_test.C ast_obj.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
         ${MY_PICO_GUI}/my_fatfs_storage.c ${MY_PICO_GUI}/my_track_touch.c)
     
     target_link_libraries(test_astobj examples lcd font config pico_stdlib hardware_spi fatfs)
@@ -61,5 +61,5 @@ if (DEFINED DO_PICO)
 else() 
     # mac os/x build...
     set(CMAKE_EXE_LINKER_FLAGS "-framework OpenGL -framework Cocoa")
-    add_executable(test_astobj main.C ast_obj.C display.C ${TIGR_DIR}/tigr.C)
+    add_executable(test_astobj main.C asteroid_test.C ast_obj.C display.C ${TIGR_DIR}/tigr.C)
 endif()
