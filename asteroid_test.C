@@ -173,6 +173,9 @@ void PlaceMeteor(class astObj &my_meteor, int dCount) {
   
   my_meteor.SetOrigin(startX, startY);
   my_meteor.SetTrajectory(xIncr,yIncr);
+
+  std::cout << "meteor placed at x/y: " << startX << "/" << startY
+    << " x/y incrs: " << xIncr << "/" << yIncr << "..." << std::endl;
 }
 
 void meteor_shower() {
@@ -183,10 +186,23 @@ void meteor_shower() {
     class astObj my_meteor1;
     PlaceMeteor(my_meteor1, dCount);
 
-    for (auto i = 0; i < dCount; i++) {
+    // random starting coordinates of meteor and its trajectory usually
+    // cause it to be visible at some point in time...
+    for(auto i = 0; (i < dCount) && !my_meteor1.Visible(); i++) {
+      my_meteor1.Advance();
+    }
+    // but not always...
+    if (!my_meteor1.Visible())
+      continue;
+    
+    std::cout << "\tmeteor is visible..." << std::endl;
+
+    while( my_meteor1.Visible() ) {
       my_meteor1.Advance();
       UpdateDisplay();
       DrawDelay();
     }
- }
+
+    std::cout << "meteor is gone!" << std::endl;
+  }
 }

@@ -145,7 +145,7 @@ class astObj {
     void Advance(); // advance and (possibly redraw) object based on its speed
 
     // call this method ONLY AFTER calling Advance:
-    bool Offscreen() { return line_segments_screen.size() > 0; }; // no line segments were recorded
+    bool Visible() { return line_segments_screen.size() > 0; }; 
 
     bool AHit(struct coordinate projectile); // has the object been hit?
 
