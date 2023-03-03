@@ -23,6 +23,8 @@ extern "C" {
 
 //#define MY_DEBUG
 
+// start/end coordinates for random asteroid placement...
+
 void StartCoordinates(int &x, int &y, int &start_square) {
   if (start_square < 0) {
     start_square = rand() / (RAND_MAX / 9 + 1);
@@ -65,6 +67,22 @@ void EndCoordinates(int &x, int &y, int &end_square, int start_square) {
 void XYincrements(int &xIncr, int &yIncr, int startX, int startY, int endX, int endY, int dCount) {
   xIncr = (endX > startX) ? (endX - startX) / dCount : -(startX - endX) / dCount;
   yIncr = (endY > startY) ? (endY - startY) / dCount : -(startY - endY) / dCount;
+}
+
+// our 'meteors' (are intended to) fall from upper left hand of window thru lower right...
+void MeteorStartEndCoordinates(int &startX, int &startY, int &endX, int &endY) {
+  int start_square = rand() / (RAND_MAX / 3 + 1);
+
+    // grid squares 0, 1, or 3...
+    switch(start_square) {
+      case 0: startX = 0 - (rand() % BOX_SIZE); startY = 0 - (rand() & BOX_SIZE); break;
+      case 1: startX = (rand() % WINDOW_WIDTH); startY = 0 - (rand() & BOX_SIZE); break;
+      case 2: startX = 0 - (rand() % BOX_SIZE); startY = rand() % WINDOW_HEIGHT;  break;
+      default: break;
+    }
+
+    endX = startX + WINDOW_WIDTH + BOX_SIZE;
+    endY = startY + WINDOW_HEIGHT + BOX_SIZE;
 }
 
 #define DOT(X,Y) coordinate(X,Y)
@@ -134,4 +152,41 @@ void asteroid_test() {
     my_astobj.SetOrigin(startX,startY);
     my_astobj.SetTrajectory(xIncr,yIncr);
   }
+}
+
+//******************************************************************************************
+// lets do some meteors...
+//******************************************************************************************
+
+std::vector<struct coordinate> meteor1_outline{ ASTEROID1 };
+std::vector<struct coordinate> meteor2_outline{ ASTEROID1 };
+
+void PlaceMeteor(class astObj &my_meteor, int dCount) {
+  int startX, startY, endX, endY;
+  MeteorStartEndCoordinates(startX, startY, endX, endY);
+
+  int xIncr, yIncr;
+
+  XYincrements(xIncr,yIncr,startX,startY,endX,endY,dCount);
+
+  my_meteor.AddOutline( ( (rand() & 1) == 1 ) ? &meteor1_outline :  &meteor2_outline );
+  
+  my_meteor.SetOrigin(startX, startY);
+  my_meteor.SetTrajectory(xIncr,yIncr);
+}
+
+void meteor_shower() {
+  int dCount = 40;  
+  bool do_test = true;
+
+  while(do_test) {
+    class astObj my_meteor1;
+    PlaceMeteor(my_meteor1, dCount);
+
+    for (auto i = 0; i < dCount; i++) {
+      my_meteor1.Advance();
+      UpdateDisplay();
+      DrawDelay();
+    }
+ }
 }

@@ -20,6 +20,7 @@ extern "C" {
 //#define MY_DEBUG
 
 void asteroid_test();
+void meteor_shower();
 
 //******************************************************************************************
 // main entry point...
@@ -40,8 +41,10 @@ int main() {
   sranddev();
 #endif
 
-  InitializeDisplay();
-  asteroid_test();
+  InitializeDisplay("meteors!");
+
+  //asteroid_test();
+  meteor_shower();
   CloseDisplay();
 
   return 0;

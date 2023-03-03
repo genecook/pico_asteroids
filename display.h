@@ -1,5 +1,7 @@
 #ifndef __DISPLAY__
 
+#include <string>
+
 #ifdef PICO_DISPLAY
 #include "LCD_Driver.h"
 #include "LCD_Touch.h"
@@ -30,7 +32,7 @@ int transposeY(int y);
 
 #define BOX_SIZE 100
 
-void InitializeDisplay();
+void InitializeDisplay(const std::string &);
 void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color, int draw_style);
 
 void UpdateDisplay();

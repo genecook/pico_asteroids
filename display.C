@@ -53,7 +53,7 @@ int transposeX(int x) {
   return WINDOW_X_OFFSET + x;
 }
 int transposeY(int y) {
-  return WINDOW_Y_OFFSET + (WINDOW_HEIGHT - y);
+  return WINDOW_Y_OFFSET + y; //(WINDOW_HEIGHT - y);
 }
 
 TPixel scolor(int wcolor, int wstyle = 0) {
@@ -80,10 +80,10 @@ void put_up_grid() {
   tigrLine(screen, WINDOW_LRX, 0, WINDOW_LRX, SCREEN_HEIGHT - 1, scolor(GREY));
 }
 
-void InitializeDisplay() {
+void InitializeDisplay(const std::string &banner) {
   screen = tigrWindow(1024,1024,"Hello", 0);
   tigrClear(screen, scolor(BLACK) ); //tigrRGB(0x80, 0x90, 0xa0));
-  tigrPrint(screen, tfont, 120, 110, tigrRGB(0xff, 0xff, 0xff), "Hello, world.");
+  tigrPrint(screen, tfont, 120, 50, tigrRGB(0xff, 0xff, 0xff), banner.c_str());
   put_up_grid();
 }
 
