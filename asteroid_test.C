@@ -70,10 +70,10 @@ void XYincrements(int &xIncr, int &yIncr, int startX, int startY, int endX, int 
 }
 
 // our 'meteors' (are intended to) fall from upper left hand of window thru lower right...
-void MeteorStartEndCoordinates(int &startX, int &startY, int &endX, int &endY) {
-  int start_square = rand() / (RAND_MAX / 3 + 1);
+void MeteorStartEndCoordinates(int &startX, int &startY, int &endX, int &endY, int lane = -1) {
+  int start_square = (lane >= 0) ? lane : rand() / (RAND_MAX / 3 + 1);
 
-    // grid squares 0, 1, or 3...
+    // lanes 0, 1, 2 (grid squares 0, 1, or 3)...
     switch(start_square) {
       case 0: startX = 0 - (rand() % BOX_SIZE); startY = 0 - (rand() & BOX_SIZE); break;
       case 1: startX = (rand() % WINDOW_WIDTH); startY = 0 - (rand() & BOX_SIZE); break;
@@ -159,11 +159,11 @@ void asteroid_test() {
 //******************************************************************************************
 
 std::vector<struct coordinate> meteor1_outline{ ASTEROID1 };
-std::vector<struct coordinate> meteor2_outline{ ASTEROID1 };
+std::vector<struct coordinate> meteor2_outline{ ASTEROID2 };
 
-void PlaceMeteor(class astObj &my_meteor, int dCount) {
+void PlaceMeteor(class astObj &my_meteor, int dCount, int lane = -1) {
   int startX, startY, endX, endY;
-  MeteorStartEndCoordinates(startX, startY, endX, endY);
+  MeteorStartEndCoordinates(startX, startY, endX, endY, lane);
 
   int xIncr, yIncr;
 
@@ -174,8 +174,10 @@ void PlaceMeteor(class astObj &my_meteor, int dCount) {
   my_meteor.SetOrigin(startX, startY);
   my_meteor.SetTrajectory(xIncr,yIncr);
 
+#ifdef DEBUG_METEORS  
   std::cout << "meteor placed at x/y: " << startX << "/" << startY
     << " x/y incrs: " << xIncr << "/" << yIncr << "..." << std::endl;
+#endif
 }
 
 void meteor_shower() {
@@ -183,26 +185,35 @@ void meteor_shower() {
   bool do_test = true;
 
   while(do_test) {
-    class astObj my_meteor1;
-    PlaceMeteor(my_meteor1, dCount);
+    std::vector<class astObj> my_meteors = { astObj(), astObj() };
+    PlaceMeteor(my_meteors[0], dCount, 1);
+    PlaceMeteor(my_meteors[1], dCount, 2);
 
     // random starting coordinates of meteor and its trajectory usually
     // cause it to be visible at some point in time...
-    for(auto i = 0; (i < dCount) && !my_meteor1.Visible(); i++) {
-      my_meteor1.Advance();
+    for(auto i = 0; (i < dCount) && !my_meteors[0].Visible(); i++) {
+      my_meteors[0].Advance();
     }
     // but not always...
-    if (!my_meteor1.Visible())
+    if (!my_meteors[0].Visible())
       continue;
-    
+#ifdef DEBUG_METEORS
     std::cout << "\tmeteor is visible..." << std::endl;
-
-    while( my_meteor1.Visible() ) {
-      my_meteor1.Advance();
+#endif
+    while( my_meteors[0].Visible() ) {
+      my_meteors[0].Advance();
+      my_meteors[1].Advance();
       UpdateDisplay();
       DrawDelay();
     }
 
+    for(auto i = 0; (i < dCount) && my_meteors[1].Visible(); i++) {
+      my_meteors[1].Advance();
+      UpdateDisplay();
+      DrawDelay();
+    }
+#ifdef DEBUG_METEORS
     std::cout << "meteor is gone!" << std::endl;
+#endif
   }
 }

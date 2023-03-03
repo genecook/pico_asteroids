@@ -13,7 +13,7 @@ void put_up_grid() {
   DrawLine(0, WINDOW_HEIGHT - 1, 10,10, RED,LINE_SOLID);
 }
 
-void InitializeDisplay() {
+void InitializeDisplay(const std::string &banner) {
   lcd_touch_startup();
   clear_screen();
   put_up_grid();
