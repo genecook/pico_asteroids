@@ -16,7 +16,7 @@ void put_up_grid() {
 void InitializeDisplay(const std::string &banner) {
   lcd_touch_startup();
   clear_screen();
-  put_up_grid();
+  //put_up_grid();
 }
 
 void DrawDelay() {

@@ -87,9 +87,13 @@ class astObj {
         origin.x = 0;
         origin.y = 0;
         at_origin = true;
-        move_count = 0;
         move_initial_count = 1;
+        move_count = move_initial_count;
+        on_screen = false;
     };
+
+    bool OnScreen() { return on_screen; };
+    void SetOnScreen() { on_screen = true; };
 
     void LocateSizeWindow(unsigned _window_ulx, unsigned _window_uly, unsigned _window_lrx, unsigned _window_lry) {
         window_ulx = _window_ulx;
@@ -97,6 +101,9 @@ class astObj {
         window_lrx = _window_lrx;
         window_lry = _window_lry;
     };
+
+    void SetCountdown(int _move_count) { move_count = move_initial_count = _move_count; };
+    int Countdown() { return move_initial_count; };
 
     void ScaleWindow(float _scale, float _rotation = 0.0) {
         scale = _scale;
@@ -142,7 +149,7 @@ class astObj {
         target_lr = _target_lr;
     }
 
-    void Advance(); // advance and (possibly redraw) object based on its speed
+    bool Advance(); // advance and (possibly redraw) object based on its speed
 
     // call this method ONLY AFTER calling Advance:
     bool Visible() { return line_segments_screen.size() > 0; }; 
@@ -201,6 +208,7 @@ class astObj {
 
     int move_initial_count; // count down based on speed. 
     int move_count;         //   draw/reset count at zero
+    bool on_screen;         // set to true once asteroid is within visible screen boundaries
 };
 #endif
 #define AST_OBJ

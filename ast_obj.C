@@ -16,14 +16,17 @@ bool operator== (const struct coordinate &p0, const struct coordinate &p1) {
 // advance and (possibly redraw) object based on its speed
 // (caller responsible for determining when to advance (move) an object)
 
-void astObj::Advance() {
+bool astObj::Advance() {
+    bool was_advanced = false;
     move_count -= 1;
     if (move_count <= 0) {
         Erase();       // erase the object from the screen at its current position
         Translate();   // place the object at its new position
         Draw();        // draw the object at its new position
         move_count = move_initial_count; // reset move count
+        was_advanced = true;
     }
+    return was_advanced;
 }
 
 // return true if projectile coordinates are on or within

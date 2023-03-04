@@ -174,13 +174,73 @@ void PlaceMeteor(class astObj &my_meteor, int dCount, int lane = -1) {
   my_meteor.SetOrigin(startX, startY);
   my_meteor.SetTrajectory(xIncr,yIncr);
 
-#ifdef DEBUG_METEORS  
-  std::cout << "meteor placed at x/y: " << startX << "/" << startY
-    << " x/y incrs: " << xIncr << "/" << yIncr << "..." << std::endl;
+  my_meteor.SetCountdown( rand() / (RAND_MAX / 9 + 1) );
+#ifdef DEBUG_METEORS
+  std::cout << "\tcount down value: " << my_meteor.Countdown() << std::endl;
 #endif
+//  std::cout << "meteor placed at x/y: " << startX << "/" << startY
+//    << " x/y incrs: " << xIncr << "/" << yIncr << "..." << std::endl;
 }
 
+#define METEORS_IN_FLIGHT 5
+
 void meteor_shower() {
+    std::vector<class astObj> my_meteors;
+
+    unsigned int clock_ticker = 0;
+
+    int dCount = 40;  
+
+    bool clock_running = true;
+
+    while(clock_running) {
+#ifdef DEBUG_METEORS
+      std::cout << "tick..." << clock_ticker << std::endl; 
+#endif
+      clock_ticker++;
+#ifdef DEBUG_METEORS
+      std::cout << "there are " << my_meteors.size() << " meteors" << std::endl;
+#endif
+      for(auto mi = my_meteors.begin(); mi != my_meteors.end();) {
+#ifdef DEBUG_METEORS
+        std::cout << "processing next meteor at time " << clock_ticker << "..." << std::endl;
+#endif
+        if (!mi->Advance()) {
+          mi++;
+          continue;
+        }
+        // this meteor moved at this clock interval...
+        if (!mi->OnScreen() && mi->Visible()) {
+#ifdef DEBUG_METEORS
+          std::cout << "falling meteor is now visible..." << std::endl;
+#endif
+          mi->SetOnScreen(); // falling meteor is now visible... 
+          continue;
+        }
+        if (mi->OnScreen() && !mi->Visible()) {
+#ifdef DEBUG_METEORS
+          std::cout << "meteor no longer visible..." << std::endl;
+#endif
+          my_meteors.erase(mi); // meteor no longer visible...
+        } else {
+          mi++;
+        }
+      }
+
+      if (my_meteors.size() < METEORS_IN_FLIGHT) {
+#ifdef DEBUG_METEORS
+        std::cout << "adding new meteor..." << std::endl;
+#endif
+        my_meteors.push_back( astObj() );
+        PlaceMeteor(my_meteors.back(), dCount);
+      }
+      UpdateDisplay();
+      DrawDelay();
+      //if (clock_ticker == 200) clock_running = false;
+    }
+}
+
+void simple_meteor_shower() {
   int dCount = 40;  
   bool do_test = true;
 
