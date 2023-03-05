@@ -82,6 +82,7 @@ class astObj {
         window_lry = WINDOW_HEIGHT; 
         scale = 1.0; 
         rotation = 0.0; 
+        current_rotation = 0.0;
         color = WHITE;
         style = SOLID;
         origin.x = 0;
@@ -105,10 +106,12 @@ class astObj {
     void SetCountdown(int _move_count) { move_count = move_initial_count = _move_count; };
     int Countdown() { return move_initial_count; };
 
-    void ScaleWindow(float _scale, float _rotation = 0.0) {
+    void SetScaleRotation(float _scale, float _rotation = 0.0) {
         scale = _scale;
         rotation = _rotation;
     };
+    struct coordinate ScaleCoordinate(struct coordinate os0);
+    struct coordinate RotateCoordinate(struct coordinate os0);
 
     // use these to see if some x,y coordinate exceeds window boundaries:
 
@@ -143,6 +146,8 @@ class astObj {
         trajectory_coord.x = x;
         trajectory_coord.y = y;
     };
+
+    struct coordinate CurrentOrigin();
 
     void SetTarget(struct coordinate _target_ul, struct coordinate _target_lr) {
         target_ul = _target_ul;
@@ -192,6 +197,7 @@ class astObj {
 
     float scale;   // scale each line segment component;
     float rotation; // rotation element for each coordinate
+    float current_rotation; // rotation in 'real time'
 
     unsigned int color; // uniform object color
     unsigned int style; // solid, dashed, dotted...

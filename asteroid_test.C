@@ -90,6 +90,7 @@ void MeteorStartEndCoordinates(int &startX, int &startY, int &endX, int &endY, i
 #define TRIANGLE(SIZE) DOT(SIZE,0), DOT(SIZE,SIZE/2), DOT(0,SIZE/2), DOT(SIZE/2,0)
 #define HEXAGON(SIZE) DOT(0,SIZE/2), DOT(SIZE/2,0), DOT(SIZE,0), DOT(SIZE + SIZE/2,SIZE/2), DOT(SIZE,SIZE), DOT(SIZE/2,SIZE), DOT(0,SIZE/2)
 #define STAR DOT(0,30), DOT(120,30), DOT(20,100), DOT(60,0), DOT(100,100), DOT(0,30)
+
 #define ASTEROID1 DOT(60,0), DOT(100,10), DOT(120,50), DOT(90,80), DOT(60,70), DOT(50,90), DOT(20,60), DOT(40,40), DOT(30,30), DOT(60,0)
 #define ASTEROID2 DOT(60,0), DOT(100,10),  DOT(120,50), DOT(90,80), DOT(50,90), DOT(20,60), DOT(30,20), DOT(60,0)
 
@@ -161,6 +162,8 @@ void asteroid_test() {
 std::vector<struct coordinate> meteor1_outline{ ASTEROID1 };
 std::vector<struct coordinate> meteor2_outline{ ASTEROID2 };
 
+#define DEBUG_METEORS 1
+
 void PlaceMeteor(class astObj &my_meteor, int dCount, int lane = -1) {
   int startX, startY, endX, endY;
   MeteorStartEndCoordinates(startX, startY, endX, endY, lane);
@@ -169,10 +172,36 @@ void PlaceMeteor(class astObj &my_meteor, int dCount, int lane = -1) {
 
   XYincrements(xIncr,yIncr,startX,startY,endX,endY,dCount);
 
-  my_meteor.AddOutline( ( (rand() & 1) == 1 ) ? &meteor1_outline :  &meteor2_outline );
-  
+  if ( (rand() & 1) == 1 ) {
+    my_meteor.AddOutline(&meteor1_outline);
+  } else {
+    my_meteor.AddOutline(&meteor2_outline);
+  }
+
   my_meteor.SetOrigin(startX, startY);
   my_meteor.SetTrajectory(xIncr,yIncr);
+
+  float scale = 1.0;
+
+  switch((int) rand() & 3) {
+    case 0: break;
+    case 1: scale = 0.25; break;
+    case 2: scale = 0.50; break;
+    case 3: scale = 0.75; break;
+    default: break;
+  }
+
+  float rotation = 0.0;
+/*
+  switch((int) rand() & 3) {
+    case 0: break;
+    case 1: rotation = 5.0;  break;
+    case 2: rotation = 10.0; break;
+    case 3: rotation = 15.0; break;
+    default: break;
+  }
+*/
+  my_meteor.SetScaleRotation(scale,rotation);
 
   my_meteor.SetCountdown( rand() / (RAND_MAX / 9 + 1) );
 #ifdef DEBUG_METEORS
@@ -195,36 +224,43 @@ void meteor_shower() {
 
     while(clock_running) {
 #ifdef DEBUG_METEORS
-      std::cout << "tick..." << clock_ticker << std::endl; 
+      //std::cout << "tick..." << clock_ticker << std::endl; 
 #endif
       clock_ticker++;
 #ifdef DEBUG_METEORS
-      std::cout << "there are " << my_meteors.size() << " meteors" << std::endl;
+      //std::cout << "there are " << my_meteors.size() << " meteors" << std::endl;
 #endif
-      for(auto mi = my_meteors.begin(); mi != my_meteors.end();) {
+
+      for (auto mi = my_meteors.begin(); mi != my_meteors.end();) {
 #ifdef DEBUG_METEORS
-        std::cout << "processing next meteor at time " << clock_ticker << "..." << std::endl;
+        //std::cout << "processing next meteor at time " << clock_ticker << "..." << std::endl;
 #endif
         if (!mi->Advance()) {
+          // no action, this meteor, this time. no need to evaluate/update its state...
           mi++;
           continue;
         }
+
         // this meteor moved at this clock interval...
+
         if (!mi->OnScreen() && mi->Visible()) {
 #ifdef DEBUG_METEORS
           std::cout << "falling meteor is now visible..." << std::endl;
 #endif
           mi->SetOnScreen(); // falling meteor is now visible... 
+          mi++;
           continue;
         }
+
         if (mi->OnScreen() && !mi->Visible()) {
 #ifdef DEBUG_METEORS
           std::cout << "meteor no longer visible..." << std::endl;
 #endif
           my_meteors.erase(mi); // meteor no longer visible...
-        } else {
-          mi++;
+          continue;
         }
+          
+        mi++;
       }
 
       if (my_meteors.size() < METEORS_IN_FLIGHT) {

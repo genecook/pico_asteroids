@@ -4,6 +4,7 @@
 #include <bitset>
 #include <cassert>
 #include <exception>
+#include <math.h>
 
 //#define ASTOBJ_DEBUG
 
@@ -48,19 +49,24 @@ void astObj::DumpLineSegments() {
 
 // translate object outline into set of on-screen line segments...
 
+struct coordinate astObj::CurrentOrigin() {
+    return at_origin ? origin : origin + trajectory_coord;
+}
+
 void astObj::Translate() {
     struct coordinate os0,os1;
 
     for(auto ix = (*outline).begin(); ix != (*outline).end(); ix++) {
         if (ix == (*outline).begin()) {
             os0 = *ix;
-            os0 += at_origin ? origin : origin + trajectory_coord;
+            os0 += CurrentOrigin();
             continue;
         }
         os1 = *ix;
-        os1 += at_origin ? origin : origin + trajectory_coord;
+        os1 += CurrentOrigin();
 
-        struct coordinate p0 = os0, p1 = os1;
+        // rotate BEFORE scaling...
+        struct coordinate p0 = ScaleCoordinate(RotateCoordinate(os0)), p1 = ScaleCoordinate(RotateCoordinate(os1));
 
         if (ClipLineSegment(p0,p1)) {
             line_segments_screen.push_back( line_segment(p0,p1) );
@@ -76,6 +82,40 @@ void astObj::Translate() {
         origin += trajectory_coord;   // we've moved on...
 
     at_origin = false;
+}
+
+struct coordinate astObj::ScaleCoordinate(struct coordinate pt) {
+    struct coordinate scaled_pt = pt;
+    if (scale == 1.0) {
+        // no scaling...
+    } else {
+        // scale the point...
+        scaled_pt.x = (int) (pt.x * scale);
+        scaled_pt.y = (int) (pt.y * scale);
+    }
+    return scaled_pt;
+}
+
+#define SIN(x) sin(x * 3.141592653589 / 180.0)
+#define COS(x) cos(x * 3.141592653589 / 180.0)
+
+struct coordinate astObj::RotateCoordinate(struct coordinate pt) {
+    struct coordinate rotated_pt = pt;
+    if (rotation == 0.0) {
+        // no rotation...
+    } else {
+        // rotate the point about the origin using the current rotation value...
+        rotated_pt.x = ceil(pt.x * COS(current_rotation) - pt.y * SIN(current_rotation));
+        rotated_pt.y = ceil(pt.x * SIN(current_rotation) + pt.y * COS(current_rotation));
+#ifdef ASTOBJ_ROTATION_DEBUG
+        std::cout << "x/y:" << pt.x << "/" << pt.y 
+        << " rotation: " << rotation << " current-rotation: " << current_rotation 
+        << "new pt x/y: " << rotated_pt.x << "/" << rotated_pt.y << std::endl;
+#endif
+        // update rotation value for next pass...
+        current_rotation += rotation;
+    }
+    return rotated_pt;
 }
 
 // clip either end or both ends of line segment (if possible) to window,
