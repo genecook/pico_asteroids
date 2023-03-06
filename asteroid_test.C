@@ -162,7 +162,7 @@ void asteroid_test() {
 std::vector<struct coordinate> meteor1_outline{ ASTEROID1 };
 std::vector<struct coordinate> meteor2_outline{ ASTEROID2 };
 
-#define DEBUG_METEORS 1
+//#define DEBUG_METEORS 1
 
 void PlaceMeteor(class astObj &my_meteor, int dCount, int lane = -1) {
   int startX, startY, endX, endY;
@@ -220,6 +220,8 @@ void meteor_shower() {
 
     int dCount = 40;  
 
+    int idle_countdown = dCount;
+
     bool clock_running = true;
 
     while(clock_running) {
@@ -241,7 +243,9 @@ void meteor_shower() {
           continue;
         }
 
-        // this meteor moved at this clock interval...
+#ifdef DEBUG_METEORS
+//        std::cout << "this meteor moved at this clock interval..." << std::endl;
+#endif
 
         if (!mi->OnScreen() && mi->Visible()) {
 #ifdef DEBUG_METEORS
@@ -259,7 +263,7 @@ void meteor_shower() {
           my_meteors.erase(mi); // meteor no longer visible...
           continue;
         }
-          
+
         mi++;
       }
 
@@ -269,10 +273,42 @@ void meteor_shower() {
 #endif
         my_meteors.push_back( astObj() );
         PlaceMeteor(my_meteors.back(), dCount);
+#ifdef DEBUG_METEORS
+        std::cout << "meteors state:" << std::endl;
+        for (auto i = 0; i < my_meteors.size(); i++) {
+            std::cout << "\t" << i << " on-screen? " << my_meteors[i].OnScreen() << " visible? " << my_meteors[i].Visible() << std::endl;
+        }
+#endif
       }
+
+      idle_countdown--;
+#ifdef DEBUG_METEORS
+      bool all_idle = true;
+#endif
+      for (auto i = 0; i < my_meteors.size(); i++) {
+            if (my_meteors[i].OnScreen() || my_meteors[i].Visible()) {
+              idle_countdown = dCount; // any apparent active meteor resets the 'idle' counter
+#ifdef DEBUG_METEORS
+              all_idle = false;
+#endif
+            }
+      }
+#ifdef DEBUG_METEORS
+      if (all_idle)
+        std::cout << "all meteors have been idle for " << idle_countdown << " tics..." << std::endl;
+#endif
+      if (idle_countdown == 0) {
+        // all meteors are idle after N loops. assume all have 'fallen' and reset...
+        my_meteors.erase(my_meteors.begin(), my_meteors.end());
+        idle_countdown = dCount;
+#ifdef DEBUG_METEORS
+        std::cout << "All meteors have 'fallen'. Starting new meteor shower..." << std::endl;
+#endif
+      }
+
+      //if (clock_ticker == 200) clock_running = false;
       UpdateDisplay();
       DrawDelay();
-      //if (clock_ticker == 200) clock_running = false;
     }
 }
 

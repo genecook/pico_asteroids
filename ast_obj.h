@@ -141,7 +141,7 @@ class astObj {
         origin.x = x;
         origin.y = y;
     };
-
+    
     void SetTrajectory(int x, int y) {
         trajectory_coord.x = x;
         trajectory_coord.y = y;
@@ -153,6 +153,8 @@ class astObj {
         target_ul = _target_ul;
         target_lr = _target_lr;
     }
+
+    int grid_square(struct coordinate p);
 
     bool Advance(); // advance and (possibly redraw) object based on its speed
 
@@ -177,7 +179,6 @@ class astObj {
 
     unsigned clip_code(struct coordinate &p0);
     int grid_index(unsigned int clip_code);
-    int grid_square(struct coordinate p);
 
     bool flip_line_segment(unsigned int code_p0, unsigned int code_p1);
 
