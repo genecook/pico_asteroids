@@ -92,6 +92,19 @@ void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style)
           transposeX(p1x), transposeY(p1y), scolor(draw_color,draw_style));
 }
 
+void DrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
+  //if ( (px < 0) || (px > 1024) || (py < 0) || (py > 1024) )
+  //  return;
+  R = R % 256;
+  //px += 1024;
+  //std::cout << "x/y: " << px << "/" << py << " R/G/B: " << std::hex 
+  //<< R << "/" << G << "/" << B << std::dec << std::endl;
+
+  //TPixel tc = (R == G == B == 0) ? scolor(WHITE) : scolor(GREEN);
+  TPixel tc = tigrRGB(R,G,B);
+  tigrPlot(screen, px, py, tc );
+}
+
 void UpdateDisplay() {
     tigrUpdate(screen);
     put_up_grid();

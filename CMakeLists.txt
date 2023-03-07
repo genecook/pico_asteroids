@@ -62,4 +62,6 @@ else()
     # mac os/x build...
     set(CMAKE_EXE_LINKER_FLAGS "-framework OpenGL -framework Cocoa")
     add_executable(test_astobj main.C asteroid_test.C ast_obj.C display.C ${TIGR_DIR}/tigr.C)
+
+    add_executable(mandelbrot_demo mandlebrot.C display.C ${TIGR_DIR}/tigr.C)
 endif()

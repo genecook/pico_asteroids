@@ -34,6 +34,7 @@ int transposeY(int y);
 
 void InitializeDisplay(const std::string &);
 void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color, int draw_style);
+void DrawDot(int px, int py, unsigned R, unsigned G, unsigned B);
 
 void UpdateDisplay();
 void DrawDelay();
