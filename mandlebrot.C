@@ -6,9 +6,14 @@
 #include <display.h>
 #include <tigr.h>
 
+//#define DEBUG_MANDELBROT 1
+
 // Defining the size of the screen.
+// to zoom, increase screen size AND adjust to center as well...
 #define Y 1024
 #define X 1024
+#define CENTER_X 0
+#define CENTER_Y 0
 
 using namespace std;
 
@@ -19,8 +24,10 @@ void myDrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
     if ( (px >= 0) && (px < X) && (py >= 0) && (py < Y)) {
         my_display_buffer[px][py] = (R<<16) | (G<<8) | B;
     } else {
-        //std::cout << "x/y: " << px << "/" << py << " R/G/B: " << std::hex 
-        //            << R << "/" << G << "/" << B << std::dec << std::endl;
+#ifdef DEBUG_MANDELBROT
+        std::cout << "x/y: " << px << "/" << py << " R/G/B: " << std::hex 
+                  << R << "/" << G << "/" << B << std::dec << std::endl;
+#endif
     }
     if (px < lo_x) lo_x = px;
     else if (px > hi_x) hi_x = px;
@@ -37,19 +44,19 @@ void dumpDisplay() {
             DrawDot(x,y,R,G,B);
         }
     }
-    //std::cout << "X range: " << lo_x << "/" << hi_x << " y:" << lo_y << "/" << hi_y << std::endl; 
+#ifdef DEBUG_MANDELBROT
+    std::cout << "X range: " << lo_x << "/" << hi_x << " y:" << lo_y << "/" << hi_y << std::endl; 
+#endif
 }
+
 // Recursive function to provide the iterative every 100th
 // f^n (0) for every pixel on the screen.
 
 int Mandle(complex<double> c, complex<double> t, int counter) {
-    //if (imag(c) != 0)
-    //   std::cout << "c: " << c << " t: " << t << " counter: " << counter << std::endl;
-    //UpdateDisplay();
     // To eliminate out of bound values.
     if (abs(t) > 4) {
-        myDrawDot(real(c) * Y / 2 + X / 2, 
-                imag(c) * Y / 2 + Y / 2,
+        myDrawDot(real(c) * Y / 2 + X / 2 + CENTER_X, 
+                imag(c) * Y / 2 + Y / 2 + CENTER_Y,
                  128 - 128 * abs(t) / abs(c), 
                  128 - 128 * abs(t) / abs(c), 
                  128 - 128 * abs(t) / abs(c));
@@ -61,8 +68,8 @@ int Mandle(complex<double> c, complex<double> t, int counter) {
     // however, higher values cause
     // more processing time.
     if (counter == 100) {
-        myDrawDot(real(c) * Y / 2 + X / 2, 
-                imag(c) * Y / 2 + Y / 2, 
+        myDrawDot(real(c) * Y / 2 + X / 2 + CENTER_X, 
+                imag(c) * Y / 2 + Y / 2 + CENTER_Y, 
                     255 * (abs((t * t)) / abs((t - c) * c)), 0, 0);
         return 0;
     }
@@ -77,6 +84,11 @@ int Mandle(complex<double> c, complex<double> t, int counter) {
 //#define INCR 0.0015
 // xbounds -2 .. 2
 // ybounds -1 .. 1
+#define X_LO -2
+#define X_HI 2
+#define Y_LO -1
+#define Y_HI 1
+
 #define INCR 0.0015
 
 int MandleSet() {
@@ -87,18 +99,17 @@ int MandleSet() {
             scnt++;
         }
     }
+#ifdef DEBUG_MANDELBROT
     std::cout << "# of Xsets/points to consider: " << xcnt << "/" << scnt << std::endl;
-
+#endif
     // Calling Mandle function for every point on the screen.
-    unsigned long long xi = 0;
-    for (double x = -2; x < 2; x += INCR) {
-        std::cout << "Xset " << xi++ << " out of " << xcnt << " sets..." << std::endl;
-        for (double y = -1; y < 1; y += INCR) {
-            complex<double> temp; // x + y * _Complex_I; 
+    //unsigned long long xi = 0;
+    for (double x = X_LO; x < X_HI; x += INCR) {
+        for (double y = Y_LO; y < Y_HI; y += INCR) {
+            complex<double> temp;
             temp.real(x);
             temp.imag(y);
             Mandle(temp,0,0);
-            //UpdateDisplay();
         }
     }
 
@@ -113,11 +124,13 @@ int main() {
     InitializeDisplay("meteors!");
 
     MandleSet();
+
     std::cout << "dumping display buffer to screen..." << std::endl;
     dumpDisplay();
     UpdateDisplay();
     std::cout << "done!" << std::endl;
-    getchar();
+
+    getchar(); // wait for input...
 
     CloseDisplay();
 
