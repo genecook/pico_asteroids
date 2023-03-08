@@ -33,6 +33,8 @@ void DrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
   //if ( (px < 0) || (px > 1024) || (py < 0) || (py > 1024) )
   //  return;
   R = R % 256;
+  unsigned int point_color = (R<<10) | (G<<5) | B; // 5 bits per color
+  draw_point(px,py,point_color);
 }
 
 void CloseDisplay() {

@@ -5,7 +5,6 @@
 #include <display.h>
 
 #ifdef FOR_PICO
-
 #else
 #include <tigr.h>
 #endif
@@ -138,6 +137,13 @@ int MandleSet() {
  * main...
 *************************************************************************/
 
+#ifdef FOR_PICO
+extern "C" {
+    void read_screen_touch(int *x, int *y);
+    void wait(unsigned int milliseconds);
+}
+#endif
+
 int main() {
     InitializeDisplay("meteors!");
 
@@ -145,6 +151,13 @@ int main() {
 
 #ifdef FOR_PICO
     // add while loop...
+    bool waiting = true;
+    int touchX, touchY;
+    while(waiting) {
+        DrawDelay();
+        read_screen_touch(&touchX,&touchY);
+        wait(1000);
+    }
 #else
     std::cout << "dumping display buffer to screen..." << std::endl;
     dumpDisplay();
