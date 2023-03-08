@@ -1,22 +1,39 @@
 #include <complex>
-#include <complex.h>
 #include <iostream>
 #include <string>
 
 #include <display.h>
+
+#ifdef FOR_PICO
+
+#else
 #include <tigr.h>
+#endif
 
 //#define DEBUG_MANDELBROT 1
 
 // Defining the size of the screen.
 // to zoom, increase screen size AND adjust to center as well...
+
+#ifdef FOR_PICO
+#define Y 320
+#define X 480
+#define CENTER_X 0
+#define CENTER_Y 0
+#else
 #define Y 1024
 #define X 1024
 #define CENTER_X 0
 #define CENTER_Y 0
+#endif
 
 using namespace std;
 
+#ifdef FOR_PICO
+void myDrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
+    DrawDot(px,py,R,G,B);
+}
+#else
 unsigned int my_display_buffer[X][Y];
 
 int lo_x = 0, hi_x = 0, lo_y = 0, hi_y = 0;
@@ -48,6 +65,7 @@ void dumpDisplay() {
     std::cout << "X range: " << lo_x << "/" << hi_x << " y:" << lo_y << "/" << hi_y << std::endl; 
 #endif
 }
+#endif
 
 // Recursive function to provide the iterative every 100th
 // f^n (0) for every pixel on the screen.
@@ -125,12 +143,16 @@ int main() {
 
     MandleSet();
 
+#ifdef FOR_PICO
+    // add while loop...
+#else
     std::cout << "dumping display buffer to screen..." << std::endl;
     dumpDisplay();
     UpdateDisplay();
     std::cout << "done!" << std::endl;
 
     getchar(); // wait for input...
+#endif
 
     CloseDisplay();
 

@@ -58,6 +58,16 @@ if (DEFINED DO_PICO)
     pico_enable_stdio_uart(test_astobj 1)
     # create map/bin/hex/uf2 file etc.
     pico_add_extra_outputs(test_astobj)
+
+    add_executable(mandlebrot_demo mandlebrot.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
+        ${MY_PICO_GUI}/my_fatfs_storage.c ${MY_PICO_GUI}/my_track_touch.c)
+
+        target_link_libraries(mandlebrot_demo examples lcd font config pico_stdlib hardware_spi fatfs)
+
+        pico_enable_stdio_usb(mandlebrot_demo 0)
+        pico_enable_stdio_uart(mandlebrot_demo 1)
+        # create map/bin/hex/uf2 file etc.
+        pico_add_extra_outputs(mandlebrot_demo)
 else() 
     # mac os/x build...
     set(CMAKE_EXE_LINKER_FLAGS "-framework OpenGL -framework Cocoa")

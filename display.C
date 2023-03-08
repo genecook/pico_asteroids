@@ -29,6 +29,12 @@ void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style)
   draw_line(p0x,p0y,p1x,p1y,draw_color,draw_style);
 }
 
+void DrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
+  //if ( (px < 0) || (px > 1024) || (py < 0) || (py > 1024) )
+  //  return;
+  R = R % 256;
+}
+
 void CloseDisplay() {
 }
 
