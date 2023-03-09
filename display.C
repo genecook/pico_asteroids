@@ -32,8 +32,8 @@ void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style)
 void DrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
   //if ( (px < 0) || (px > 1024) || (py < 0) || (py > 1024) )
   //  return;
-  R = R % 256;
-  unsigned int point_color = (R<<10) | (G<<5) | B; // 5 bits per color
+  //R = R % 256;
+  unsigned int point_color = (R<<11) | (G<<5) | B; // 5 bits per color
   draw_point(px,py,point_color);
 }
 
