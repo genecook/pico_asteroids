@@ -8,6 +8,9 @@ Heres a list of the demo programs in this repo:
     clip the asteroid line segments to a window. This program was used to debug the line drawing
     code.
 
+    2. mandlebrot_demo - generate mandlebrot image. The points/accuracy are dumbed down somewhat
+    on the pico. Both cores on the pico are employed in effort to speed up the generation.
+ 
     The cmake (CMakeLists.txt) file can build this demo for mac os/x, or for the raspberry pi pico.
 
 To build the mac os/x executable:
