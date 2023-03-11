@@ -62,7 +62,7 @@ if (DEFINED DO_PICO)
     add_executable(mandlebrot_demo mandlebrot.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
         ${MY_PICO_GUI}/my_fatfs_storage.c ${MY_PICO_GUI}/my_track_touch.c)
 
-        target_link_libraries(mandlebrot_demo examples lcd font config pico_stdlib hardware_spi fatfs)
+        target_link_libraries(mandlebrot_demo examples lcd font config pico_stdlib pico_multicore hardware_spi fatfs)
 
         pico_enable_stdio_usb(mandlebrot_demo 0)
         pico_enable_stdio_uart(mandlebrot_demo 1)

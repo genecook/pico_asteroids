@@ -34,7 +34,13 @@ void DrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
   //  return;
   //R = R % 256;
   unsigned int point_color = (R<<11) | (G<<5) | B; // 5 bits per color
-  draw_point(px,py,point_color);
+  draw_point(py,px,point_color);
+}
+
+void DrawText(int cx, int cy, const std::string ts) {
+  for (auto i = 0; i < ts.size(); i++) {
+     display_char(cy + i, cx, ts[i], FONT_SIZE_16, COLOR_BLACK, COLOR_WHITE);
+  }
 }
 
 void CloseDisplay() {
@@ -111,6 +117,10 @@ void DrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
   //TPixel tc = (R == G == B == 0) ? scolor(WHITE) : scolor(GREEN);
   TPixel tc = tigrRGB(R,G,B);
   tigrPlot(screen, px, py, tc );
+}
+
+void DrawText(int cx, int cy,const std::string ts) {
+
 }
 
 void UpdateDisplay() {

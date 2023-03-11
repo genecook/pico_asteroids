@@ -3,70 +3,91 @@
 #include <string>
 
 #include <display.h>
+#include <math.h>
 
 #ifdef FOR_PICO
+    #include <pico/util/queue.h>
+    #include <pico/sem.h>
+    #include <pico/multicore.h>
+
+    // dumb down pico - pico floating pt is emulated and thus mandlebrot generation is quite slow
+    #define ACCURACY 40
+
+    // Defining the size of the screen.
+    // to zoom, increase screen size AND adjust to center as well...
+    #define Y 480
+    #define X 320
+    #define CENTER_X 80
+    #define CENTER_Y 0
 #else
-#include <tigr.h>
+    #include <tigr.h>
+
+    #define ACCURACY 100
+
+    #define Y 1024
+    #define X 1024
+    #define CENTER_X 100
+    #define CENTER_Y 0
 #endif
 
 //#define DEBUG_MANDELBROT 1
 
-// Defining the size of the screen.
-// to zoom, increase screen size AND adjust to center as well...
-
-#ifdef FOR_PICO
-#define Y 320
-#define X 480
-#define CENTER_X 0
-#define CENTER_Y 0
-#else
-#define Y 1024
-#define X 1024
-#define CENTER_X 0
-#define CENTER_Y 0
-#endif
-
 using namespace std;
 
 #ifdef FOR_PICO
-void myDrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
-    DrawDot(px,py,R,G,B);
-}
-#else
-unsigned int my_display_buffer[X][Y];
+    #define FLAG_VALUE 123
 
-void myDrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
-    if ( (px >= 0) && (px < X) && (py >= 0) && (py < Y)) {
-        my_display_buffer[px][py] = (R<<16) | (G<<8) | B;
-    } else {
+    // task gated functioms (only one task at a time can access these functions)...
+    semaphore_t display_char_sem; // used to insure only one core at a time writes to LCD
+    void myDrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
+        if ( (px < 0) || (px >= X) && (py < 0) && (py >= Y)) { 
+            return; // dot is off screen...
+        }
+        if ( (R==0) && (G==R) && (B==R) ) {
+            return; // ASSUME no need to draw black dot as screen is initially all black
+        }
+        sem_acquire_blocking(&display_char_sem);
+        DrawDot(px,py,R,G,B);
+        sem_release(&display_char_sem); 
+    }
+    // ...end of task gated functions...
+
+#else
+    unsigned int my_display_buffer[X][Y];
+
+    void myDrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
+        if ( (px >= 0) && (px < X) && (py >= 0) && (py < Y)) {
+            my_display_buffer[px][py] = (R<<16) | (G<<8) | B;
+        } else {
 #ifdef DEBUG_MANDELBROT
         std::cout << "x/y: " << px << "/" << py << " R/G/B: " << std::hex 
                   << R << "/" << G << "/" << B << std::dec << std::endl;
 #endif
-    }
-}
-
-void dumpDisplay() {
-    for(auto x = 0; x < X; x++) {
-        for(auto y = 0; y < Y; y++) {
-            unsigned R = (my_display_buffer[x][y] >> 16) & 0xff;
-            unsigned G = (my_display_buffer[x][y] >> 8) & 0xff;
-            unsigned B = my_display_buffer[x][y] & 0xff;
-            DrawDot(x,y,R,G,B);
         }
     }
-}
+
+    void dumpDisplay() {
+        for(auto x = 0; x < X; x++) {
+            for(auto y = 0; y < Y; y++) {
+                unsigned R = (my_display_buffer[x][y] >> 16) & 0xff;
+                unsigned G = (my_display_buffer[x][y] >> 8) & 0xff;
+                unsigned B = my_display_buffer[x][y] & 0xff;
+                DrawDot(x,y,R,G,B);
+            }
+        }
+    }
 #endif
 
 // Recursive function to provide the iterative every 100th
 // f^n (0) for every pixel on the screen.
 
-#ifdef FOR_PICO
-#define NCOLORS_LO 16 
-#define NCOLORS_MASK 0x1f
+#ifdef FOR_PICO 
+    // lcd i'm using implements 5 bits per color...
+    #define NCOLORS_LO 16 
+    #define NCOLORS_MASK 0x1f
 #else
-#define NCOLORS_LO 128
-#define NCOLORS_MASK 0xff 
+    #define NCOLORS_LO 128
+    #define NCOLORS_MASK 0xff 
 #endif
 
 int Mandle(complex<double> c, complex<double> t, int counter) {
@@ -84,7 +105,7 @@ int Mandle(complex<double> c, complex<double> t, int counter) {
     // The more accurate the fractal is generated,
     // however, higher values cause
     // more processing time.
-    if (counter == 100) {
+    if (counter == ACCURACY) {
         myDrawDot(real(c) * Y / 2 + X / 2 + CENTER_X, 
                   imag(c) * Y / 2 + Y / 2 + CENTER_Y, 
                   NCOLORS_MASK * (abs((t * t)) / abs((t - c) * c)), 0, 0);
@@ -98,17 +119,57 @@ int Mandle(complex<double> c, complex<double> t, int counter) {
     return 0;
 }
 
-//#define INCR 0.0015
-// xbounds -2 .. 2
-// ybounds -1 .. 1
-#define X_LO -2
-#define X_HI 2
-#define Y_LO -1
-#define Y_HI 1
+#ifdef FOR_PICO
+    // limit somewhat the # of points to evaluate on pico. its just too slow...
+    #define X_LO -1
+    #define X_HI 1
+    #define Y_LO -1
+    #define Y_HI 1
+    #define INCR 0.0019
+#else
+    #define X_LO -2
+    #define X_HI 1
+    #define Y_LO -2
+    #define Y_HI 1
+    #define INCR 0.0015
+#endif
 
-#define INCR 0.0015
+// task shared data...
+#ifdef FOR_PICO
+    semaphore_t task_data_sem;
+#endif
+    double x = X_LO;
+    double y = Y_LO;
+// ...end of task shared data
 
-int MandleSet() {
+bool MandleSetPull() {
+#ifdef FOR_PICO
+    sem_acquire_blocking(&task_data_sem);
+#endif
+    // acquire current coordinates to evaluate, increment to next coordinate...
+    double tx = x, ty = y;
+    y += INCR;
+    if (y >= Y_HI) {
+        x += INCR;
+        y = Y_LO;
+    }
+    double endx = x;
+
+#ifdef FOR_PICO
+    sem_release(&task_data_sem);
+#endif
+
+    if (endx >= X_HI)
+        return false;
+ 
+    complex<double> temp;
+    temp.real(tx);
+    temp.imag(ty);
+    Mandle(temp,0,0);
+    return true;
+}
+
+void MandleSet() {
 #ifdef DEBUG_MANDELBROT
     long long scnt = 0, xcnt = 0;
     for (double x = -2; x < 2; x += INCR) {
@@ -119,19 +180,30 @@ int MandleSet() {
     }
     std::cout << "# of Xsets/points to consider: " << xcnt << "/" << scnt << std::endl;
 #endif
-
     // Calling Mandle function for every point on the screen.
-    complex<double> temp;
-    for (double x = X_LO; x < X_HI; x += INCR) {
-        for (double y = Y_LO; y < Y_HI; y += INCR) {
-            temp.real(x);
-            temp.imag(y);
-            Mandle(temp,0,0);
-        }
+    while(MandleSetPull()) {
+        // more points to process...
     }
-
-    return 0;
 }
+
+#ifdef FOR_PICO
+void MandleSetCore1() {
+  multicore_fifo_push_blocking(FLAG_VALUE);
+
+  uint32_t g = multicore_fifo_pop_blocking();
+
+  if (g == FLAG_VALUE) {
+    // what we expected...
+  } else {
+    printf("ERROR, CORE 1 STARTUP???\n");
+    return;
+  }
+
+  while(MandleSetPull()) {
+    // more points to process...
+  }
+}
+#endif
 
 /************************************************************************
  * main...
@@ -142,10 +214,27 @@ extern "C" {
     void read_screen_touch(int *x, int *y);
     void wait(unsigned int milliseconds);
 }
+
 #endif
 
 int main() {
     InitializeDisplay("meteors!");
+
+#ifdef FOR_PICO
+    sem_init(&display_char_sem,1,1);
+    sem_init(&task_data_sem,1,1);
+    multicore_launch_core1(MandleSetCore1);
+    uint32_t g = multicore_fifo_pop_blocking();
+
+    if (g == FLAG_VALUE) {
+        // what we expected...
+        multicore_fifo_push_blocking(FLAG_VALUE);
+    } else {
+        printf("ERROR, CORE 0 STARTUP???\n");
+        return 0;
+    }
+
+#endif
 
     MandleSet();
 
@@ -172,4 +261,3 @@ int main() {
     return 0;
 }
 
- 
