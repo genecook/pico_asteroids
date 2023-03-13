@@ -12,6 +12,7 @@
 
     // dumb down pico - pico floating pt is emulated and thus mandlebrot generation is quite slow
     #define ACCURACY 40
+    #define FLOAT float
 
     // Defining the size of the screen.
     // to zoom, increase screen size AND adjust to center as well...
@@ -23,7 +24,7 @@
     #include <tigr.h>
 
     #define ACCURACY 100
-
+    #define FLOAT double
     #define Y 1024
     #define X 1024
     #define CENTER_X 100
@@ -39,6 +40,7 @@ using namespace std;
 
     // task gated functioms (only one task at a time can access these functions)...
     semaphore_t display_char_sem; // used to insure only one core at a time writes to LCD
+
     void myDrawDot(int px, int py, unsigned R, unsigned G, unsigned B) {
         if ( (px < 0) || (px >= X) && (py < 0) && (py >= Y)) { 
             return; // dot is off screen...
@@ -78,11 +80,11 @@ using namespace std;
     }
 #endif
 
-// Recursive function to provide the iterative every 100th
+// Recursive function to provide the iterative every Nth
 // f^n (0) for every pixel on the screen.
 
 #ifdef FOR_PICO 
-    // lcd i'm using implements 5 bits per color...
+    // lcd we are using implements 5 bits per color...
     #define NCOLORS_LO 16 
     #define NCOLORS_MASK 0x1f
 #else
@@ -90,7 +92,7 @@ using namespace std;
     #define NCOLORS_MASK 0xff 
 #endif
 
-int Mandle(complex<double> c, complex<double> t, int counter) {
+int Mandle(complex<FLOAT> c, complex<FLOAT> t, int counter) {
     // To eliminate out of bound values.
     if (abs(t) > 4) {
         myDrawDot(real(c) * Y / 2 + X / 2 + CENTER_X, 
@@ -147,13 +149,13 @@ bool MandleSetPull() {
     sem_acquire_blocking(&task_data_sem);
 #endif
     // acquire current coordinates to evaluate, increment to next coordinate...
-    double tx = x, ty = y;
+    FLOAT tx = x, ty = y;
     y += INCR;
     if (y >= Y_HI) {
         x += INCR;
         y = Y_LO;
     }
-    double endx = x;
+    FLOAT endx = x;
 
 #ifdef FOR_PICO
     sem_release(&task_data_sem);
@@ -162,7 +164,7 @@ bool MandleSetPull() {
     if (endx >= X_HI)
         return false;
  
-    complex<double> temp;
+    complex<FLOAT> temp;
     temp.real(tx);
     temp.imag(ty);
     Mandle(temp,0,0);
@@ -172,9 +174,9 @@ bool MandleSetPull() {
 void MandleSet() {
 #ifdef DEBUG_MANDELBROT
     long long scnt = 0, xcnt = 0;
-    for (double x = -2; x < 2; x += INCR) {
+    for (FLOAT x = -2; x < 2; x += INCR) {
         xcnt++;
-        for (double y = -1; y < 1; y += INCR) {
+        for (FLOAT y = -1; y < 1; y += INCR) {
             scnt++;
         }
     }

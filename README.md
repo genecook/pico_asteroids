@@ -11,6 +11,8 @@ Heres a list of the demo programs in this repo:
     2. mandlebrot_demo - generate mandlebrot image. The points/accuracy are dumbed down somewhat
     on the pico. Both cores on the pico are employed in effort to speed up the generation.
  
+    Both of these demo programs make use of the excellent tigr (https://github.com/erkkah/tigr.git) graphics library.
+
     The cmake (CMakeLists.txt) file can build this demo for mac os/x, or for the raspberry pi pico.
 
 To build the mac os/x executable:
