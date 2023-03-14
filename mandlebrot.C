@@ -15,11 +15,12 @@
     #define FLOAT float
 
     // Defining the size of the screen.
-    // to zoom, increase screen size AND adjust to center as well...
+    // to zoom, increase or decrease scale AND adjust to center as well...
     #define Y 480
     #define X 320
-    #define CENTER_X 80
-    #define CENTER_Y 0
+    #define CENTER_X 40
+    #define CENTER_Y 140
+    #define SCALE 2.4
 #else
     #include <tigr.h>
 
@@ -27,8 +28,9 @@
     #define FLOAT double
     #define Y 1024
     #define X 1024
-    #define CENTER_X 100
-    #define CENTER_Y 0
+    #define CENTER_X 50
+    #define CENTER_Y 220
+    #define SCALE 2
 #endif
 
 //#define DEBUG_MANDELBROT 1
@@ -92,14 +94,20 @@ using namespace std;
     #define NCOLORS_MASK 0xff 
 #endif
 
+int plotX(complex<FLOAT> c) {
+    return real(c) * Y / SCALE + X / SCALE + CENTER_X;
+}
+int plotY(complex<FLOAT> c) {
+    return imag(c) * Y / SCALE + Y / SCALE / 2 + CENTER_Y;
+}
+
+#define LO_COLOR_INDEX ((int)(NCOLORS_LO - NCOLORS_LO * abs(t) / abs(c)) & 0xff)
+
 int Mandle(complex<FLOAT> c, complex<FLOAT> t, int counter) {
     // To eliminate out of bound values.
     if (abs(t) > 4) {
-        myDrawDot(real(c) * Y / 2 + X / 2 + CENTER_X, 
-                  imag(c) * Y / 2 + Y / 2 + CENTER_Y,
-                  NCOLORS_LO - NCOLORS_LO * abs(t) / abs(c), 
-                  NCOLORS_LO - NCOLORS_LO * abs(t) / abs(c), 
-                  NCOLORS_LO - NCOLORS_LO * abs(t) / abs(c));
+        // can be used to 'fill in' low intensity colors, but I prefere black 'background'...
+        //myDrawDot(plotX(c), plotY(c), LO_COLOR_INDEX, LO_COLOR_INDEX, LO_COLOR_INDEX);
         return 0;
     }
     // To put about the end of the fractal,
@@ -108,9 +116,7 @@ int Mandle(complex<FLOAT> c, complex<FLOAT> t, int counter) {
     // however, higher values cause
     // more processing time.
     if (counter == ACCURACY) {
-        myDrawDot(real(c) * Y / 2 + X / 2 + CENTER_X, 
-                  imag(c) * Y / 2 + Y / 2 + CENTER_Y, 
-                  NCOLORS_MASK * (abs((t * t)) / abs((t - c) * c)), 0, 0);
+        myDrawDot(plotX(c), plotY(c), NCOLORS_MASK * (abs((t * t)) / abs((t - c) * c)), 0, 0);
         return 0;
     }
 
