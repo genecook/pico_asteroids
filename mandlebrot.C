@@ -94,19 +94,15 @@ using namespace std;
     #define NCOLORS_MASK 0xff 
 #endif
 
-int plotX(complex<FLOAT> c) {
-    return real(c) * Y / SCALE + X / SCALE + CENTER_X;
-}
-int plotY(complex<FLOAT> c) {
-    return imag(c) * Y / SCALE + Y / SCALE / 2 + CENTER_Y;
-}
+int plotX(complex<FLOAT> c) { return real(c) * Y / SCALE + X / SCALE + CENTER_X; }
+int plotY(complex<FLOAT> c) { return imag(c) * Y / SCALE + Y / SCALE / 2 + CENTER_Y; }
 
 #define LO_COLOR_INDEX ((int)(NCOLORS_LO - NCOLORS_LO * abs(t) / abs(c)) & 0xff)
 
 int Mandle(complex<FLOAT> c, complex<FLOAT> t, int counter) {
     // To eliminate out of bound values.
     if (abs(t) > 4) {
-        // can be used to 'fill in' low intensity colors, but I prefere black 'background'...
+        // can be used to 'fill in' low intensity colors, but I prefer black 'background'...
         //myDrawDot(plotX(c), plotY(c), LO_COLOR_INDEX, LO_COLOR_INDEX, LO_COLOR_INDEX);
         return 0;
     }
@@ -128,7 +124,7 @@ int Mandle(complex<FLOAT> c, complex<FLOAT> t, int counter) {
 }
 
 #ifdef FOR_PICO
-    // limit somewhat the # of points to evaluate on pico. its just too slow...
+    // limit somewhat the # of points to evaluate on pico. otherwise its just too slow...
     #define X_LO -1
     #define X_HI 1
     #define Y_LO -1
@@ -146,8 +142,8 @@ int Mandle(complex<FLOAT> c, complex<FLOAT> t, int counter) {
 #ifdef FOR_PICO
     semaphore_t task_data_sem;
 #endif
-    double x = X_LO;
-    double y = Y_LO;
+    FLOAT x = X_LO;
+    FLOAT y = Y_LO;
 // ...end of task shared data
 
 bool MandleSetPull() {

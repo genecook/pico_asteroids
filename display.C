@@ -95,7 +95,8 @@ void put_up_grid() {
 }
 
 void InitializeDisplay(const std::string &banner) {
-  screen = tigrWindow(1024,1024,"Hello", 0);
+  screen = tigrWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello", 0);
+
   tigrClear(screen, scolor(BLACK) ); //tigrRGB(0x80, 0x90, 0xa0));
   tigrPrint(screen, tfont, 120, 50, tigrRGB(0xff, 0xff, 0xff), banner.c_str());
   put_up_grid();
