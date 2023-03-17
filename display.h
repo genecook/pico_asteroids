@@ -33,13 +33,18 @@ int transposeY(int y);
 #define BOX_SIZE 100
 
 void InitializeDisplay(const std::string &);
-void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color, int draw_style);
+
+void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color, int draw_style = 0);
 void DrawDot(int px, int py, unsigned R, unsigned G, unsigned B);
 void DrawText(int cx, int cy,const std::string ts);
 
+void EraseDisplay();
 void UpdateDisplay();
 void DrawDelay();
 void CloseDisplay();
-
+void getPointerState(int *x, int *y, int *buttons);
+int getDisplayChar();
+void display_crosshairs(int x, int y);
+void display_window_border(int ulX, int ulY, int lrX, int lrY);
 #endif
 #define __DISPLAY__

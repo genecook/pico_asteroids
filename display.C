@@ -94,12 +94,27 @@ void put_up_grid() {
   tigrLine(screen, WINDOW_LRX, 0, WINDOW_LRX, SCREEN_HEIGHT - 1, scolor(GREY));
 }
 
+#define CROSSHAIR_SIZE 20
+void display_crosshairs(int x, int y) {
+  tigrLine(screen, x - CROSSHAIR_SIZE, y, x + CROSSHAIR_SIZE, y, scolor(WHITE));
+  tigrLine(screen, x, y - CROSSHAIR_SIZE, x, y + CROSSHAIR_SIZE, scolor(WHITE));
+}
+void display_window_border(int ulX, int ulY, int lrX, int lrY) {
+  tigrLine(screen,ulX,ulY,lrX,ulY,scolor(WHITE));
+  tigrLine(screen,lrX,ulY,lrX,lrY,scolor(WHITE));
+  tigrLine(screen,ulX,ulY,ulX,lrY,scolor(WHITE));
+  tigrLine(screen,ulX,lrY,lrX,lrY,scolor(WHITE));
+}
 void InitializeDisplay(const std::string &banner) {
   screen = tigrWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello", 0);
 
   tigrClear(screen, scolor(BLACK) ); //tigrRGB(0x80, 0x90, 0xa0));
   tigrPrint(screen, tfont, 120, 50, tigrRGB(0xff, 0xff, 0xff), banner.c_str());
   put_up_grid();
+}
+
+void EraseDisplay() {
+  tigrClear(screen, scolor(BLACK) ); //tigrRGB(0x80, 0x90, 0xa0));
 }
 
 void DrawLine(int p0x, int p0y, int p1x, int p1y, int draw_color,int draw_style) {
@@ -126,7 +141,7 @@ void DrawText(int cx, int cy,const std::string ts) {
 
 void UpdateDisplay() {
     tigrUpdate(screen);
-    put_up_grid();
+    //put_up_grid();
 }
 
 void DrawDelay() {
@@ -139,5 +154,13 @@ void CloseDisplay() {
   }
 
   tigrFree(screen);
+}
+
+void getPointerState(int *x, int *y, int *buttons) {
+  tigrMouse(screen, x, y, buttons);
+}
+
+int getDisplayChar() {
+  return tigrReadChar(screen);
 }
 #endif
