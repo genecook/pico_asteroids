@@ -33,6 +33,13 @@
     #define SCALE 2
 #endif
 
+#ifdef FOR_PICO
+extern "C" {
+    void read_screen_touch(int *x, int *y);
+    void wait(unsigned int milliseconds);
+}
+#endif
+
 //#define DEBUG_MANDELBROT 1
 
 using namespace std;
@@ -173,6 +180,17 @@ bool MandleSetPull() {
     return true;
 }
 
+bool MandleSetDone() { 
+ #ifdef FOR_PICO
+    sem_acquire_blocking(&task_data_sem);
+#endif
+    bool all_done = (x >= X_HI); 
+#ifdef FOR_PICO
+    sem_release(&task_data_sem);
+#endif
+    return all_done;
+}
+
 void MandleSet() {
 #ifdef DEBUG_MANDELBROT
     long long scnt = 0, xcnt = 0;
@@ -188,6 +206,11 @@ void MandleSet() {
     while(MandleSetPull()) {
         // more points to process...
     }
+
+#ifdef FOR_PICO
+    // this core is done, but perhaps the other core is not quite done???
+    wait(1000);
+#endif
 }
 
 #ifdef FOR_PICO
@@ -210,19 +233,11 @@ void MandleSetCore1() {
 #endif
 
 /************************************************************************
- * main...
+ * main entry point...
 *************************************************************************/
 
-#ifdef FOR_PICO
-extern "C" {
-    void read_screen_touch(int *x, int *y);
-    void wait(unsigned int milliseconds);
-}
-
-#endif
-
 int main() {
-    InitializeDisplay("meteors!");
+    InitializeDisplay("mandlebrot!");
 
 #ifdef FOR_PICO
     sem_init(&display_char_sem,1,1);
@@ -243,6 +258,9 @@ int main() {
     MandleSet();
 
 #ifdef FOR_PICO
+    // reset core 1. we may need it later on...
+    multicore_reset_core1();
+
     // add while loop...
     bool waiting = true;
     int touchX, touchY;
