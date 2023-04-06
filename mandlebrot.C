@@ -10,6 +10,15 @@
     #include <pico/sem.h>
     #include <pico/multicore.h>
 
+    extern "C" {
+        void read_screen_touch(int *x, int *y);
+        void wait(unsigned int milliseconds);
+    }
+#else
+     #include <tigr.h>
+#endif
+
+#ifdef FOR_PICO
     // dumb down pico - pico floating pt is emulated and thus mandlebrot generation is quite slow
     #define ACCURACY 40
     #define FLOAT float
@@ -21,9 +30,18 @@
     #define CENTER_X 40
     #define CENTER_Y 140
     #define SCALE 2.4
-#else
-    #include <tigr.h>
 
+    // lcd we are using implements 5 bits per color...
+    #define NCOLORS_LO 16 
+    #define NCOLORS_MASK 0x1f
+
+    // limit somewhat the # of points to evaluate on pico. otherwise its just too slow...
+    #define X_LO -1
+    #define X_HI 1
+    #define Y_LO -1
+    #define Y_HI 1
+    #define INCR 0.0019
+#else
     #define ACCURACY 100
     #define FLOAT double
     #define Y 1024
@@ -31,13 +49,15 @@
     #define CENTER_X 50
     #define CENTER_Y 220
     #define SCALE 2
-#endif
 
-#ifdef FOR_PICO
-extern "C" {
-    void read_screen_touch(int *x, int *y);
-    void wait(unsigned int milliseconds);
-}
+    #define NCOLORS_LO 128
+    #define NCOLORS_MASK 0xff 
+
+    #define X_LO -2
+    #define X_HI 1
+    #define Y_LO -2
+    #define Y_HI 1
+    #define INCR 0.0015
 #endif
 
 //#define DEBUG_MANDELBROT 1
@@ -92,15 +112,6 @@ using namespace std;
 // Recursive function to provide the iterative every Nth
 // f^n (0) for every pixel on the screen.
 
-#ifdef FOR_PICO 
-    // lcd we are using implements 5 bits per color...
-    #define NCOLORS_LO 16 
-    #define NCOLORS_MASK 0x1f
-#else
-    #define NCOLORS_LO 128
-    #define NCOLORS_MASK 0xff 
-#endif
-
 int plotX(complex<FLOAT> c) { return real(c) * Y / SCALE + X / SCALE + CENTER_X; }
 int plotY(complex<FLOAT> c) { return imag(c) * Y / SCALE + Y / SCALE / 2 + CENTER_Y; }
 
@@ -129,21 +140,6 @@ int Mandle(complex<FLOAT> c, complex<FLOAT> t, int counter) {
  
     return 0;
 }
-
-#ifdef FOR_PICO
-    // limit somewhat the # of points to evaluate on pico. otherwise its just too slow...
-    #define X_LO -1
-    #define X_HI 1
-    #define Y_LO -1
-    #define Y_HI 1
-    #define INCR 0.0019
-#else
-    #define X_LO -2
-    #define X_HI 1
-    #define Y_LO -2
-    #define Y_HI 1
-    #define INCR 0.0015
-#endif
 
 // task shared data...
 #ifdef FOR_PICO
