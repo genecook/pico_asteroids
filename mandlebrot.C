@@ -18,9 +18,9 @@
      #include <tigr.h>
 #endif
 
+namespace MandlebrotCode {
+
 #ifdef FOR_PICO
-    // dumb down pico - pico floating pt is emulated and thus mandlebrot generation is quite slow
-    #define ACCURACY 40
     #define FLOAT float
 
     // Defining the size of the screen.
@@ -35,14 +35,15 @@
     #define NCOLORS_LO 16 
     #define NCOLORS_MASK 0x1f
 
+    // dumb down pico - pico floating pt is emulated and thus mandlebrot generation is quite slow
+    #define _ACCURACY 40
     // limit somewhat the # of points to evaluate on pico. otherwise its just too slow...
-    #define X_LO -1
-    #define X_HI 1
-    #define Y_LO -1
-    #define Y_HI 1
-    #define INCR 0.0019
+    #define _X_LO -1.0
+    #define _X_HI 1.0
+    #define _Y_LO -1.0
+    #define _Y_HI 1.0
+    #define _INCR 0.0019
 #else
-    #define ACCURACY 100
     #define FLOAT double
     #define Y 1024
     #define X 1024
@@ -53,12 +54,30 @@
     #define NCOLORS_LO 128
     #define NCOLORS_MASK 0xff 
 
-    #define X_LO -2
-    #define X_HI 1
-    #define Y_LO -2
-    #define Y_HI 1
-    #define INCR 0.0015
+    // dumb down pico - pico floating pt is emulated and thus mandlebrot generation is quite slow
+    #define _ACCURACY 100
+    #define _X_LO -2
+    #define _X_HI 1
+    #define _Y_LO -2
+    #define _Y_HI 1
+    #define _INCR 0.0015
 #endif
+
+int ACCURACY = _ACCURACY;
+FLOAT X_LO = _X_LO;
+FLOAT X_HI = _X_HI;
+FLOAT Y_LO = _Y_LO;
+FLOAT Y_HI = _Y_HI;
+FLOAT INCR = _INCR;
+
+void setMandlebrotParms(int accuracy, float x_lo,float x_hi,float y_lo, float y_hi, float incr) {
+    ACCURACY = accuracy;
+    X_LO = x_lo;
+    X_HI = x_hi;
+    Y_LO = y_lo;
+    Y_HI = y_hi;
+    INCR = incr;
+}
 
 //#define DEBUG_MANDELBROT 1
 
@@ -187,28 +206,6 @@ bool MandleSetDone() {
     return all_done;
 }
 
-void MandleSet() {
-#ifdef DEBUG_MANDELBROT
-    long long scnt = 0, xcnt = 0;
-    for (FLOAT x = -2; x < 2; x += INCR) {
-        xcnt++;
-        for (FLOAT y = -1; y < 1; y += INCR) {
-            scnt++;
-        }
-    }
-    std::cout << "# of Xsets/points to consider: " << xcnt << "/" << scnt << std::endl;
-#endif
-    // Calling Mandle function for every point on the screen.
-    while(MandleSetPull()) {
-        // more points to process...
-    }
-
-#ifdef FOR_PICO
-    // this core is done, but perhaps the other core is not quite done???
-    wait(1000);
-#endif
-}
-
 #ifdef FOR_PICO
 void MandleSetCore1() {
   multicore_fifo_push_blocking(FLAG_VALUE);
@@ -229,18 +226,18 @@ void MandleSetCore1() {
 #endif
 
 /************************************************************************
- * main entry point...
+ * mandlebrot main entry point...
 *************************************************************************/
 
-int main() {
+int mandle_main() {
+#ifdef FOR_PICO
     InitializeDisplay("mandlebrot!");
 
-#ifdef FOR_PICO
+    // setup second 'helper' core...
     sem_init(&display_char_sem,1,1);
     sem_init(&task_data_sem,1,1);
     multicore_launch_core1(MandleSetCore1);
     uint32_t g = multicore_fifo_pop_blocking();
-
     if (g == FLAG_VALUE) {
         // what we expected...
         multicore_fifo_push_blocking(FLAG_VALUE);
@@ -249,11 +246,14 @@ int main() {
         return 0;
     }
 
-#endif
+    // generate the plot...
+    while(MandleSetPull()) {
+        // more points to process...
+    }
 
-    MandleSet();
+    // this core is done, but perhaps the other core is not quite done???
+    wait(1000);
 
-#ifdef FOR_PICO
     // reset core 1. we may need it later on...
     multicore_reset_core1();
 
@@ -265,17 +265,28 @@ int main() {
         read_screen_touch(&touchX,&touchY);
         wait(1000);
     }
+
+    CloseDisplay();
+    return 0;
 #else
+    InitializeDisplay("mandlebrot!");
+
+    // generate the plot...
+    while(MandleSetPull()) {
+        // more points to process...
+    }
     std::cout << "dumping display buffer to screen..." << std::endl;
     dumpDisplay();
     UpdateDisplay();
     std::cout << "done!" << std::endl;
-
     getchar(); // wait for input...
-#endif
-
     CloseDisplay();
-
     return 0;
+#endif
 }
 
+} // end of MandlebrotCode namespace
+
+int main() {
+    return MandlebrotCode::mandle_main();
+}
