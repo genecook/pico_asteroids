@@ -13,8 +13,10 @@ Heres a list of the demo programs in this repo:
  
     Both of these demo programs make use of the excellent tigr (https://github.com/erkkah/tigr.git) graphics library.
 
-    The cmake (CMakeLists.txt) file can build this demo for mac os/x, or for the raspberry pi pico.
+    The cmake (CMakeLists.txt) file can build these two demo for mac os/x, or for the raspberry pi pico.
 
+    3. try_lvgl - example program using LVGL graphics library. 
+    
 To build the mac os/x executable:
     mkdir build
     cd build

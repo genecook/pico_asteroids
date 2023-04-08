@@ -31,6 +31,7 @@ if (DEFINED DO_PICO)
     # raspberry pi pico build...
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -DPICO_DISPLAY -DFOR_PICO")
 
+    set(LV_CONF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lvgl/lv_conf.h CACHE STRING "" FORCE)
     pico_sdk_init()
 
     add_subdirectory(${PICO_LCD_LIB}/lib/config lib/config)
@@ -40,6 +41,8 @@ if (DEFINED DO_PICO)
     add_subdirectory(${PICO_LCD_LIB}/lib/fatfs lib/fatfs)
     add_subdirectory(${PICO_LCD_LIB}/lib/sdcard lib/sdcard)
     
+    add_subdirectory(lvgl)
+
     include_directories(${PICO_LCD_LIB}/examples)
     include_directories(${PICO_LCD_LIB}/lib/config)
     include_directories(${PICO_LCD_LIB}/lib/lcd)
@@ -48,6 +51,19 @@ if (DEFINED DO_PICO)
     include_directories(${PICO_LCD_LIB}/lib/sdcard)
 
     include_directories(${PROJECTS_PATH}/pico_gui)
+
+    include_directories(lvgl)
+    include_directories(lvgl/src/draw)
+
+    add_executable(try_lvgl try_lvgl.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
+        ${MY_PICO_GUI}/my_fatfs_storage.c ${MY_PICO_GUI}/my_track_touch.c)
+
+    target_link_libraries(try_lvgl examples lcd font config pico_stdlib hardware_spi fatfs lvgl)
+
+    pico_enable_stdio_usb(try_lvgl 0)
+    pico_enable_stdio_uart(try_lvgl 1)
+    # create map/bin/hex/uf2 file etc.
+    pico_add_extra_outputs(try_lvgl)
 
     add_executable(test_astobj main.C asteroid_test.C ast_obj.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
         ${MY_PICO_GUI}/my_fatfs_storage.c ${MY_PICO_GUI}/my_track_touch.c)
