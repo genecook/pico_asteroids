@@ -59,8 +59,8 @@ struct line_segment {
     struct coordinate p1;
 };
 
-#define WINDOW_HEIGHT 320
-#define WINDOW_WIDTH  480
+#define WINDOW_HEIGHT 480
+#define WINDOW_WIDTH  320
 
 // need screen size, background color defines!!!
 

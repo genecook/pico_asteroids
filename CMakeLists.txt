@@ -55,6 +55,8 @@ if (DEFINED DO_PICO)
     include_directories(lvgl)
     include_directories(lvgl/src/draw)
 
+    add_definitions(-D USE_VERTICAL_DISPLAY)
+
     add_executable(try_lvgl try_lvgl.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
         ${MY_PICO_GUI}/my_fatfs_storage.c ${MY_PICO_GUI}/my_track_touch.c)
 
@@ -65,6 +67,8 @@ if (DEFINED DO_PICO)
     # create map/bin/hex/uf2 file etc.
     pico_add_extra_outputs(try_lvgl)
 
+    remove_definitions(-D USE_VERTICAL_DISPLAY)
+
     add_executable(test_astobj main.C asteroid_test.C ast_obj.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
         ${MY_PICO_GUI}/my_fatfs_storage.c ${MY_PICO_GUI}/my_track_touch.c)
     
@@ -74,7 +78,7 @@ if (DEFINED DO_PICO)
     pico_enable_stdio_uart(test_astobj 1)
     # create map/bin/hex/uf2 file etc.
     pico_add_extra_outputs(test_astobj)
-
+    
     add_executable(mandlebrot_demo mandlebrot.C display.C ${MY_PICO_GUI}/lcd_touch_wrapper.c 
         ${MY_PICO_GUI}/my_fatfs_storage.c ${MY_PICO_GUI}/my_track_touch.c)
 
